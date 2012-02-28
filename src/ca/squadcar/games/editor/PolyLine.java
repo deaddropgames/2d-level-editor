@@ -2,11 +2,18 @@ package ca.squadcar.games.editor;
 
 import java.awt.Graphics;
 import java.util.ArrayList;
+import java.util.List;
+
+import org.ini4j.Ini;
+import org.ini4j.Profile.Section;
 
 public class PolyLine extends DrawableElement {
 
+	public static int counter = 0;
+	
 	private ArrayList<WorldPoint> points;
 	private int pointSize;
+	private int id;
 	
 	public PolyLine(final WorldPoint point) {
 		
@@ -14,6 +21,9 @@ public class PolyLine extends DrawableElement {
 		points.add(point);
 		
 		pointSize = 4;
+		
+		// store an ID so we can name it within the level file next time
+		id = PolyLine.counter++;
 	}
 	
 	public PolyLine(final PolyLine polyLine) {
@@ -54,12 +64,28 @@ public class PolyLine extends DrawableElement {
 			
 			gfx.drawPolyline(tempX, tempY, points.size());
 		}
-		
-		super.draw(gfx, zoomFactor);
 	}
 	
 	public ArrayList<WorldPoint> getPoints() {
 		
 		return points;
+	}
+
+	@Override
+	public void saveToFile(Ini ini) {
+		
+		String name = String.format("polyline%d", id);
+		ini.put("level", "polyline", name);
+		Section section = ini.add(name);
+		List<Float> xPoints = new ArrayList<Float>();
+		List<Float> yPoints = new ArrayList<Float>();
+		for(WorldPoint point : points) {
+
+			// TODO: translate to starting point...
+			xPoints.add(point.x);
+			yPoints.add(point.y);
+		}
+		section.putAll("x", xPoints.toArray());
+		section.putAll("y", yPoints.toArray());
 	}
 }

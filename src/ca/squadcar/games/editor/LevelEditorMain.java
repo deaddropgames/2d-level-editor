@@ -18,6 +18,8 @@ import java.awt.event.InputEvent;
 import javax.swing.JSeparator;
 import java.util.ResourceBundle;
 import java.awt.BorderLayout;
+
+import javax.swing.JFileChooser;
 import javax.swing.JToolBar;
 import javax.swing.JScrollPane;
 import javax.swing.JPanel;
@@ -27,14 +29,24 @@ import javax.swing.ScrollPaneConstants;
 import java.awt.GridLayout;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
+import java.io.File;
+import java.io.IOException;
+
 import javax.swing.JButton;
 
+import org.ini4j.Ini;
+import org.ini4j.InvalidFileFormatException;
+
 public class LevelEditorMain {
+	
+	final private String[] reservedFilenames = {"editor.ini", "config.ini", "test.ini"};
 
 	private JFrame frmSquadcarGamesLevel;
 	private JLabel lblLeftStatuslabel;
@@ -49,6 +61,7 @@ public class LevelEditorMain {
 	private LevelEditorSettings settings;
 	private float zoomFactor;
 	private PolyLine currPolyLine;
+	private String currFilename;
 
 	/**
 	 * Launch the application.
@@ -81,6 +94,8 @@ public class LevelEditorMain {
 			
 			System.err.println("Failed to load the input settings.");
 		}
+		
+		currFilename = null;
 		
 		initialize();
 	}
@@ -118,10 +133,34 @@ public class LevelEditorMain {
 		mnFile.add(separator_1);
 		
 		JMenuItem mntmSave = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmSave.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		mntmSave.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				if(currFilename == null) {
+
+					if(chooseLevelFilename()) {
+						
+						saveLevel();
+						return;
+					}
+				}
+				
+				saveLevel();
+			}
+		});
 		mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
 		mnFile.add(mntmSave);
 		
 		JMenuItem mntmSaveAs = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmSaveAs.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		mntmSaveAs.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				if(chooseLevelFilename()) {
+					
+					saveLevel();
+				}
+			}
+		});
 		mnFile.add(mntmSaveAs);
 		
 		JSeparator separator = new JSeparator();
@@ -257,5 +296,79 @@ public class LevelEditorMain {
 		
 		// tell the scroll pane to update its scroll bars...
 		scrollPane.setViewportView(canvas);
+	}
+	
+	private boolean chooseLevelFilename() {
+		
+		// make sure there is something to save...
+		if(!canvas.hasElements()) {
+			
+			JOptionPane.showMessageDialog(frmSquadcarGamesLevel, 
+					ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.nothingToSave.text"),
+					ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.nothingToSave.title"),
+					JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
+		
+		JFileChooser fc;
+		if(currFilename != null) {
+			
+			fc = new JFileChooser(new File(currFilename));
+		} else {
+			
+			// TODO: default directory?
+			fc = new JFileChooser();
+		}
+
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("Level Files (INI)", "ini");
+		fc.setFileFilter(filter);
+		int returnVal = fc.showSaveDialog(frmSquadcarGamesLevel);
+		if(returnVal == JFileChooser.APPROVE_OPTION) {
+			
+			File file = fc.getSelectedFile();
+			if(!file.exists() || JOptionPane.showConfirmDialog(fc, ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.existsMsg.text")) == JOptionPane.YES_OPTION) {
+				
+				// save to disk
+				for(String test : reservedFilenames) {
+					
+					if(test.compareToIgnoreCase(file.getName()) == 0) {
+						
+						JOptionPane.showMessageDialog(fc, 
+								ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.reservedFileMsg.text"),
+								ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.reservedFileMsg.title"),
+								JOptionPane.ERROR_MESSAGE);
+						return false;
+					}
+				}
+				
+				currFilename = file.getAbsolutePath();
+				return true;
+			}
+		}
+		
+		// if we get here...user cancelled
+		return false;
+	}
+	
+	private void saveLevel() {
+		
+		if(currFilename == null) {
+			
+			System.err.println("No current filename to save file to.");
+			return;
+		}
+		
+		try {
+			
+			Ini ini = new Ini();
+			canvas.saveToFile(ini);
+			ini.store(new File(currFilename));
+		} catch (InvalidFileFormatException ex) {
+
+			ex.printStackTrace();
+		} catch (IOException ex) {
+
+			ex.printStackTrace();
+		}
 	}
 }

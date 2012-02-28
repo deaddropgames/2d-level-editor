@@ -3,6 +3,9 @@ package ca.squadcar.games.editor;
 import java.awt.Graphics;
 
 import javax.swing.JPanel;
+
+import org.ini4j.Ini;
+
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -79,5 +82,18 @@ public class LevelCanvas extends JPanel {
 	public void setCanvasDimension(Dimension dim) {
 		
 		canvasDim = new Dimension(dim);
+	}
+	
+	public boolean hasElements() {
+		
+		return (elements.size() > 0);
+	}
+	
+	public void saveToFile(Ini ini) {
+		
+		for(DrawableElement element : elements) {
+			
+			element.saveToFile(ini);
+		}
 	}
 }
