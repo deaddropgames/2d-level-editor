@@ -79,11 +79,14 @@ public class PolyLine extends DrawableElement {
 		Section section = ini.add(name);
 		List<Float> xPoints = new ArrayList<Float>();
 		List<Float> yPoints = new ArrayList<Float>();
+		WorldPoint startPoint = points.get(0);
 		for(WorldPoint point : points) {
 
-			// TODO: translate to starting point...
-			xPoints.add(point.x);
-			yPoints.add(point.y);
+			// Translate all points such that the first is at our origin
+			xPoints.add(point.x - startPoint.x);
+			
+			// invert y axis
+			yPoints.add(-(point.y - startPoint.y));
 		}
 		section.putAll("x", xPoints.toArray());
 		section.putAll("y", yPoints.toArray());

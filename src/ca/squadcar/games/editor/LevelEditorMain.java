@@ -47,6 +47,8 @@ import org.ini4j.InvalidFileFormatException;
 public class LevelEditorMain {
 	
 	final private String[] reservedFilenames = {"editor.ini", "config.ini", "test.ini"};
+	final private String defaultLevelDir = "levels/";
+	final private String defaultTestLevelFilename = "levels/test.ini";
 
 	private JFrame frmSquadcarGamesLevel;
 	private JLabel lblLeftStatuslabel;
@@ -62,6 +64,7 @@ public class LevelEditorMain {
 	private float zoomFactor;
 	private PolyLine currPolyLine;
 	private String currFilename;
+	private boolean unsavedChanges;
 
 	/**
 	 * Launch the application.
@@ -96,6 +99,7 @@ public class LevelEditorMain {
 		}
 		
 		currFilename = null;
+		unsavedChanges = false;
 		
 		initialize();
 	}
@@ -124,6 +128,25 @@ public class LevelEditorMain {
 		});
 		
 		JMenuItem mntmNew = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmNew.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		mntmNew.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				if(unsavedChanges) {
+				
+					int result = JOptionPane.showConfirmDialog(frmSquadcarGamesLevel, 
+							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.unsavedChanges.text"),
+							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.unsavedChanges.title"),
+							JOptionPane.YES_NO_OPTION);
+					
+					if(result == JOptionPane.NO_OPTION || result == JOptionPane.CANCEL_OPTION) {
+						
+						return;
+					}
+				}
+				
+				resetLevel();
+			}
+		});
 		mnFile.add(mntmNew);
 		
 		JMenuItem mntmOpen = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmOpen.text")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -140,12 +163,12 @@ public class LevelEditorMain {
 
 					if(chooseLevelFilename()) {
 						
-						saveLevel();
+						saveLevel(currFilename);
 						return;
 					}
 				}
 				
-				saveLevel();
+				saveLevel(currFilename);
 			}
 		});
 		mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
@@ -157,7 +180,7 @@ public class LevelEditorMain {
 				
 				if(chooseLevelFilename()) {
 					
-					saveLevel();
+					saveLevel(currFilename);
 				}
 			}
 		});
@@ -218,6 +241,62 @@ public class LevelEditorMain {
 		});
 		toolBar.add(btnZoomOut);
 		
+		JButton btnTestLevel = new JButton(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnTestLevel.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		btnTestLevel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				if(!canvas.hasElements()) {
+					
+					JOptionPane.showMessageDialog(frmSquadcarGamesLevel, 
+							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.nothingToSave.text"),
+							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.nothingToSave.title"),
+							JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+				
+				if(settings.getSimJar() == null || settings.getSimJar().isEmpty()) {
+					
+					JOptionPane.showMessageDialog(frmSquadcarGamesLevel, 
+							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnTestLevel.emptySimJar.text"),
+							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnTestLevel.emptySimJar.title"),
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
+				File simJar = new File(settings.getSimJar());
+				if(!simJar.exists()) {
+					
+					JOptionPane.showMessageDialog(frmSquadcarGamesLevel, 
+							String.format(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnTestLevel.simJarNotExists.text"),
+									settings.getSimJar()),
+							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnTestLevel.simJarNotExists.title"),
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
+				// save the current level to test.ini
+				// TODO: eventually we may want to handle more arguments...for now we ignore the ${level} param and just use test.ini
+				File testFile = new File(defaultTestLevelFilename);
+				saveLevel(defaultTestLevelFilename);
+				
+				// spawn it
+				ProcessBuilder pb = new ProcessBuilder("java", "-jar", simJar.getName(), testFile.getAbsolutePath());
+				if(simJar.getParent() != null) {
+				
+					pb.directory(new File(simJar.getParent()));
+				}
+				
+				try {
+					
+					pb.start();
+				} catch (IOException ex) {
+
+					ex.printStackTrace();
+				}
+			}
+		});
+		toolBar.add(btnTestLevel);
+		
 		JPanel statusPanel = new JPanel();
 		statusPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		frmSquadcarGamesLevel.getContentPane().add(statusPanel, BorderLayout.SOUTH);
@@ -234,21 +313,29 @@ public class LevelEditorMain {
 		canvas.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent evt) {
+				
 				if(!inDrawingMode) {
+					
 					return;
 				}
 				
 				// left click means add a point
 				if(evt.getButton() == MouseEvent.BUTTON1) {
+					
 					WorldPoint point = new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor));
 					if(currPolyLine == null) {
+						
 						currPolyLine = new PolyLine(point);
 						canvas.setTempDrawableElement(currPolyLine);
 						lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.endPolyLineTip"));
 					} else {
+						
 						currPolyLine.addPoint(point);
 					}
+					
+					unsavedChanges = true;
 				} else if(evt.getButton() == MouseEvent.BUTTON3) { // right click means end polyline
+					
 					endCurrPolyLine();
 				}
 				
@@ -258,7 +345,7 @@ public class LevelEditorMain {
 		canvas.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseMoved(MouseEvent evt) {
-				lblRightStatuslabel.setText(String.format("(%.2f, %.2f)", (evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)));
+				lblRightStatuslabel.setText(String.format("(%.2f, %.2f)", (evt.getPoint().x / zoomFactor), (-evt.getPoint().y / zoomFactor)));
 			}
 		});
 		canvas.setCanvasDimension(new Dimension(500, 300));
@@ -274,8 +361,10 @@ public class LevelEditorMain {
 	private void endCurrPolyLine() {
 		
 		if(currPolyLine != null && currPolyLine.getPoints().size() > 1) {
+			
 			// add to our canvas permanently (deep copy)
 			canvas.addDrawableElement(new PolyLine(currPolyLine));
+			unsavedChanges = true;
 		}
 		
 		// reset our current polyline
@@ -283,8 +372,10 @@ public class LevelEditorMain {
 		canvas.setTempDrawableElement(null);
 		
 		if(!inDrawingMode) {
+			
 			lblLeftStatuslabel.setText("");
 		} else {
+			
 			lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.drawingModeOn"));
 		}
 	}
@@ -316,8 +407,8 @@ public class LevelEditorMain {
 			fc = new JFileChooser(new File(currFilename));
 		} else {
 			
-			// TODO: default directory?
-			fc = new JFileChooser();
+			// default directory?
+			fc = new JFileChooser(new File(defaultLevelDir));
 		}
 
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("Level Files (INI)", "ini");
@@ -350,9 +441,9 @@ public class LevelEditorMain {
 		return false;
 	}
 	
-	private void saveLevel() {
+	private void saveLevel(final String filename) {
 		
-		if(currFilename == null) {
+		if(filename == null) {
 			
 			System.err.println("No current filename to save file to.");
 			return;
@@ -361,8 +452,19 @@ public class LevelEditorMain {
 		try {
 			
 			Ini ini = new Ini();
-			canvas.saveToFile(ini);
-			ini.store(new File(currFilename));
+			canvas.saveToFile(ini, settings);
+			if(filename.endsWith(".ini")) {
+				
+				ini.store(new File(filename));
+			} else {
+				
+				ini.store(new File(filename + ".ini"));
+			}
+			lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.levelSaved"));
+			if(filename != defaultTestLevelFilename) {
+				
+				unsavedChanges = false;
+			}
 		} catch (InvalidFileFormatException ex) {
 
 			ex.printStackTrace();
@@ -370,5 +472,13 @@ public class LevelEditorMain {
 
 			ex.printStackTrace();
 		}
+	}
+	
+	private void resetLevel() {
+		
+		canvas.reset();
+		canvas.repaint();
+		currFilename = null;
+		unsavedChanges = false;
 	}
 }

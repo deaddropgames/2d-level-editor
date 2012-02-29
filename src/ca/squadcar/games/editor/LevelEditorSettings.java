@@ -6,16 +6,12 @@ import org.ini4j.Ini;
 
 public class LevelEditorSettings {
 
-	private float startX;
-	private float startY;
-	private String simExe;
+	private String simJar;
 	private String simArgs;
 	
 	public LevelEditorSettings() {
 		
-		startX = -5.0f;
-		startY = 2.0f;
-		simExe = "";
+		simJar = "";
 		simArgs = "${level}";
 	}
 	
@@ -30,9 +26,7 @@ public class LevelEditorSettings {
 				return false;
 			}
 			
-			this.startX = ini.get("export", "startX", float.class);
-			this.startY = ini.get("export", "startY", float.class);
-			this.simExe = ini.get("simulator", "simExe", String.class);
+			this.simJar = ini.get("simulator", "simJar", String.class);
 			this.simArgs = ini.get("simulator", "simArgs", String.class);
 		} catch(Exception ex) {
 			
@@ -48,34 +42,14 @@ public class LevelEditorSettings {
 		return false;
 	}
 
-	public float getStartX() {
+	public String getSimJar() {
 		
-		return startX;
+		return simJar;
 	}
 
-	public void setStartX(float startX) {
+	public void setSimJar(String simJar) {
 		
-		this.startX = startX;
-	}
-
-	public float getStartY() {
-		
-		return startY;
-	}
-
-	public void setStartY(float startY) {
-		
-		this.startY = startY;
-	}
-
-	public String getSimExe() {
-		
-		return simExe;
-	}
-
-	public void setSimExe(String simExe) {
-		
-		this.simExe = simExe;
+		this.simJar = simJar;
 	}
 
 	public String getSimArgs() {

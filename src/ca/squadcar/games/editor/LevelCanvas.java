@@ -89,11 +89,16 @@ public class LevelCanvas extends JPanel {
 		return (elements.size() > 0);
 	}
 	
-	public void saveToFile(Ini ini) {
+	public void saveToFile(Ini ini, LevelEditorSettings settings) {
 		
 		for(DrawableElement element : elements) {
 			
 			element.saveToFile(ini);
 		}
+	}
+	
+	public void reset() {
+		
+		elements.clear();
 	}
 }
