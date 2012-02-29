@@ -15,26 +15,34 @@ public class PolyLine extends DrawableElement {
 	private int pointSize;
 	private int id;
 	
+	public PolyLine() {
+		
+		init();
+	}
+	
 	public PolyLine(final WorldPoint point) {
 		
-		points = new ArrayList<WorldPoint>();
+		init();
 		points.add(point);
+	}
+	
+	public PolyLine(final PolyLine polyLine) {
+		
+		init();
+		for(WorldPoint point : polyLine.getPoints()) {
+			
+			points.add(new WorldPoint(point));
+		}
+	}
+	
+	private void init() {
+		
+		points = new ArrayList<WorldPoint>();
 		
 		pointSize = 4;
 		
 		// store an ID so we can name it within the level file next time
 		id = PolyLine.counter++;
-	}
-	
-	public PolyLine(final PolyLine polyLine) {
-		
-		points = new ArrayList<WorldPoint>();
-		for(WorldPoint point : polyLine.getPoints()) {
-			
-			points.add(new WorldPoint(point));
-		}
-		
-		pointSize = 4;
 	}
 	
 	// need to scale this properly for zoom and what not

@@ -131,17 +131,9 @@ public class LevelEditorMain {
 		mntmNew.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
-				if(unsavedChanges) {
-				
-					int result = JOptionPane.showConfirmDialog(frmSquadcarGamesLevel, 
-							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.unsavedChanges.text"),
-							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.unsavedChanges.title"),
-							JOptionPane.YES_NO_OPTION);
+				if(!checkSavedChanges()) {
 					
-					if(result == JOptionPane.NO_OPTION || result == JOptionPane.CANCEL_OPTION) {
-						
-						return;
-					}
+					return;
 				}
 				
 				resetLevel();
@@ -150,6 +142,36 @@ public class LevelEditorMain {
 		mnFile.add(mntmNew);
 		
 		JMenuItem mntmOpen = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmOpen.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		mntmOpen.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				if(!checkSavedChanges()) {
+					
+					return;
+				}
+				
+				JFileChooser fc = new JFileChooser(new File(defaultLevelDir));
+				FileNameExtensionFilter filter = new FileNameExtensionFilter(
+						ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.levelFiles.fileType.text"), 
+						"ini");
+				fc.setFileFilter(filter);
+				int returnVal = fc.showOpenDialog(frmSquadcarGamesLevel);
+				if(returnVal == JFileChooser.APPROVE_OPTION) {
+
+					File levelFile = fc.getSelectedFile();
+					
+					if(!canvas.loadLevelFromFile(levelFile)) {
+						
+						JOptionPane.showMessageDialog(frmSquadcarGamesLevel,
+								ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.text"), 
+								ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.title"), 
+								JOptionPane.ERROR_MESSAGE);
+					}
+					
+					canvas.repaint();
+				}
+			}
+		});
 		mnFile.add(mntmOpen);
 		
 		JSeparator separator_1 = new JSeparator();
@@ -197,7 +219,9 @@ public class LevelEditorMain {
 		mntmAbout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JOptionPane.showMessageDialog(frmSquadcarGamesLevel,
-						ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.aboutDlg.text"), ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.aboutDlg.title"), JOptionPane.INFORMATION_MESSAGE);
+						ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.aboutDlg.text"), 
+						ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.aboutDlg.title"), 
+						JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 		mnHelp.add(mntmAbout);
@@ -411,7 +435,9 @@ public class LevelEditorMain {
 			fc = new JFileChooser(new File(defaultLevelDir));
 		}
 
-		FileNameExtensionFilter filter = new FileNameExtensionFilter("Level Files (INI)", "ini");
+		FileNameExtensionFilter filter = new FileNameExtensionFilter(
+				ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.levelFiles.fileType.text"), 
+				"ini");
 		fc.setFileFilter(filter);
 		int returnVal = fc.showSaveDialog(frmSquadcarGamesLevel);
 		if(returnVal == JFileChooser.APPROVE_OPTION) {
@@ -480,5 +506,23 @@ public class LevelEditorMain {
 		canvas.repaint();
 		currFilename = null;
 		unsavedChanges = false;
+	}
+	
+	private boolean checkSavedChanges() {
+		
+		if(unsavedChanges) {
+			
+			int result = JOptionPane.showConfirmDialog(frmSquadcarGamesLevel, 
+					ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.unsavedChanges.text"),
+					ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.unsavedChanges.title"),
+					JOptionPane.YES_NO_OPTION);
+			
+			if(result == JOptionPane.NO_OPTION || result == JOptionPane.CANCEL_OPTION) {
+				
+				return false;
+			}
+		}
+		
+		return true;
 	}
 }

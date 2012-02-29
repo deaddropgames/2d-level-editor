@@ -9,6 +9,7 @@ import org.ini4j.Ini;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.io.File;
 import java.util.ArrayList;
 
 @SuppressWarnings("serial")
@@ -100,5 +101,59 @@ public class LevelCanvas extends JPanel {
 	public void reset() {
 		
 		elements.clear();
+	}
+	
+	public boolean loadLevelFromFile(final File levelFile) {
+		
+		boolean retVal = true;
+		try {
+			
+			Ini ini = new Ini(levelFile);
+		    if(ini.isEmpty()) {
+				
+		    	System.err.println(String.format("Input INI file '%s' is empty.", levelFile.getName()));
+				return false;
+			}
+		    
+		    // clear the canvas
+		    reset();
+		    
+		    // get our supported sections - currently this is just poly lines
+		    Ini.Section levelSection = ini.get("level");
+		    String[] polyLineNames = levelSection.getAll("polyline", String[].class);
+		    PolyLine currPolyLine = null;
+		    for(String polyLineName : polyLineNames) {
+		    	
+		    	// get x an y points for this line string
+		    	Ini.Section currLineStringSection = ini.get(polyLineName);
+		    	float[] xVals = currLineStringSection.getAll("x", float[].class);
+		    	float[] yVals = currLineStringSection.getAll("y", float[].class);
+		    	
+		    	// sanity check
+		    	if(xVals.length != yVals.length) {
+		    		
+		    		System.err.println(String.format("Section '%s' has uneven number of x and y values.", polyLineName));
+		    		retVal = false;
+		    		continue;
+		    	}
+		    	
+		    	currPolyLine = new PolyLine();
+		    	for(int ii = 0; ii < xVals.length; ii++) {
+			    	
+		    		// don't forget to flip the points y-vals!!
+		    		currPolyLine.addPoint(new WorldPoint(xVals[ii], -yVals[ii]));
+		    	}
+		    	
+		    	elements.add(new PolyLine(currPolyLine));
+		    	currPolyLine = null;
+		    }
+		    
+		} catch(Exception ex) {
+			
+			ex.printStackTrace();
+			return false;
+		}
+		
+		return retVal;
 	}
 }
