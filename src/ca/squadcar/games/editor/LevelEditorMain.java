@@ -3,6 +3,7 @@ package ca.squadcar.games.editor;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Point;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
@@ -65,6 +66,7 @@ public class LevelEditorMain {
 	private PolyLine currPolyLine;
 	private String currFilename;
 	private boolean unsavedChanges;
+	private Point viewportCentre;
 
 	/**
 	 * Launch the application.
@@ -100,6 +102,7 @@ public class LevelEditorMain {
 		
 		currFilename = null;
 		unsavedChanges = false;
+		viewportCentre = null;
 		
 		initialize();
 	}
@@ -249,8 +252,25 @@ public class LevelEditorMain {
 		
 		btnZoomIn = new JButton(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnZoomIn.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		btnZoomIn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				zoomFactor *= 2;
+			public void actionPerformed(ActionEvent arg0) {	
+				
+				// preserve the center position we are currently looking at
+				viewportCentre = new Point(scrollPane.getViewport().getViewPosition());
+				Dimension vpSize = scrollPane.getViewport().getExtentSize();
+				
+				// get actual centre
+				viewportCentre.x += vpSize.width / 2;
+				viewportCentre.y += vpSize.height / 2;
+				
+				// translate to new position
+				viewportCentre.x *= 2;
+				viewportCentre.y *= 2;
+				
+				// get top left corner
+				viewportCentre.x -= vpSize.width / 2;
+				viewportCentre.y -= vpSize.height / 2;
+				
+				zoomFactor *= 2;	
 				updateForZoom();
 			}
 		});
@@ -259,6 +279,33 @@ public class LevelEditorMain {
 		btnZoomOut = new JButton(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnZoomOut.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		btnZoomOut.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				
+				// preserve the center position we are currently looking at
+				viewportCentre = new Point(scrollPane.getViewport().getViewPosition());
+				Dimension vpSize = scrollPane.getViewport().getExtentSize();
+				
+				// get actual centre
+				viewportCentre.x += vpSize.width / 2;
+				viewportCentre.y += vpSize.height / 2;
+				
+				// translate to new position
+				viewportCentre.x /= 2;
+				viewportCentre.y /= 2;
+				
+				// get top left corner
+				viewportCentre.x -= vpSize.width / 2;
+				viewportCentre.y -= vpSize.height / 2;
+				
+				if(viewportCentre.x < 0) {
+					
+					viewportCentre.x = 0;
+				}
+				
+				if(viewportCentre.y < 0) {
+					
+					viewportCentre.y = 0;
+				}
+				
 				zoomFactor /= 2;
 				updateForZoom();
 			}
@@ -372,7 +419,8 @@ public class LevelEditorMain {
 				lblRightStatuslabel.setText(String.format("(%.2f, %.2f)", (evt.getPoint().x / zoomFactor), (-evt.getPoint().y / zoomFactor)));
 			}
 		});
-		canvas.setCanvasDimension(new Dimension(500, 300));
+		
+		canvas.setCanvasDimension(settings.getCanvisSize());
 		canvas.setZoomFactor(zoomFactor);
 		
 		scrollPane = new JScrollPane(canvas);
@@ -411,6 +459,12 @@ public class LevelEditorMain {
 		
 		// tell the scroll pane to update its scroll bars...
 		scrollPane.setViewportView(canvas);
+		
+		// if we zoomed, let's preserve the viewport centre
+		if(viewportCentre != null) {
+			
+			scrollPane.getViewport().setViewPosition(viewportCentre);
+		}
 	}
 	
 	private boolean chooseLevelFilename() {

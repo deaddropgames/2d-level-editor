@@ -156,4 +156,9 @@ public class LevelCanvas extends JPanel {
 		
 		return retVal;
 	}
+	
+	public Dimension getCanvasDimension() {
+		
+		return canvasDim;
+	}
 }
