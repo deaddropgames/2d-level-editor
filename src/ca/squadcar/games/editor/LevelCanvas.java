@@ -9,6 +9,7 @@ import org.ini4j.Ini;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Point;
 import java.io.File;
 import java.util.ArrayList;
 
@@ -19,6 +20,7 @@ public class LevelCanvas extends JPanel {
 	private float zoomFactor;
 	private DrawableElement temp;
 	private Dimension canvasDim;
+	private BipedReference bipedRef;
 	
 	/**
 	 * Custom panel for drawing onto
@@ -31,6 +33,8 @@ public class LevelCanvas extends JPanel {
 		zoomFactor = 1.0f;
 		temp = null;
 		canvasDim = null;
+		
+		reset();
 	}
 
 	@Override
@@ -87,7 +91,7 @@ public class LevelCanvas extends JPanel {
 	
 	public boolean hasElements() {
 		
-		return (elements.size() > 0);
+		return (elements.size() > 1); // NOTE: the biped element is always there and doesn't count...
 	}
 	
 	public void saveToFile(Ini ini, LevelEditorSettings settings) {
@@ -101,6 +105,9 @@ public class LevelCanvas extends JPanel {
 	public void reset() {
 		
 		elements.clear();
+
+		bipedRef = new BipedReference();
+		elements.add(bipedRef);
 	}
 	
 	public boolean loadLevelFromFile(final File levelFile) {
@@ -160,5 +167,10 @@ public class LevelCanvas extends JPanel {
 	public Dimension getCanvasDimension() {
 		
 		return canvasDim;
+	}
+	
+	public void updateForViewportChange(final Point point) {
+		
+		bipedRef.setOffset(point);
 	}
 }

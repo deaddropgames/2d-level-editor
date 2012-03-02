@@ -32,6 +32,8 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.ItemListener;
@@ -427,6 +429,30 @@ public class LevelEditorMain {
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		
+		scrollPane.getHorizontalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+
+			@Override
+			public void adjustmentValueChanged(AdjustmentEvent arg0) {
+				
+				// move the biped reference
+				Point point = scrollPane.getViewport().getViewPosition();
+				canvas.updateForViewportChange(new Point(Math.round(point.x / zoomFactor), Math.round(point.y / zoomFactor)));
+				canvas.repaint();
+			}
+		});
+		
+		scrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+
+			@Override
+			public void adjustmentValueChanged(AdjustmentEvent arg0) {
+				
+				// move the biped reference
+				Point point = scrollPane.getViewport().getViewPosition();
+				canvas.updateForViewportChange(new Point(Math.round(point.x / zoomFactor), Math.round(point.y / zoomFactor)));
+				canvas.repaint();
+			}
+		});
+		
 		frmSquadcarGamesLevel.getContentPane().add(scrollPane, BorderLayout.CENTER);
 	}
 
@@ -464,6 +490,9 @@ public class LevelEditorMain {
 		if(viewportCentre != null) {
 			
 			scrollPane.getViewport().setViewPosition(viewportCentre);
+			
+			// move the biped reference
+			canvas.updateForViewportChange(new Point(Math.round(viewportCentre.x / zoomFactor), Math.round(viewportCentre.y / zoomFactor)));
 		}
 	}
 	
