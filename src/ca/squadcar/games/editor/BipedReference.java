@@ -64,4 +64,11 @@ public class BipedReference extends DrawableElement {
 		offsetX = point.x;
 		offsetY = point.y;
 	}
+
+	@Override
+	public boolean hitTest(WorldPoint point, float zoomFactor) {
+
+		// no-op, doesn't matter...
+		return false;
+	}
 }

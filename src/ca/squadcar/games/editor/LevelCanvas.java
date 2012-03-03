@@ -148,7 +148,8 @@ public class LevelCanvas extends JPanel {
 		    	for(int ii = 0; ii < xVals.length; ii++) {
 			    	
 		    		// don't forget to flip the points y-vals!!
-		    		currPolyLine.addPoint(new WorldPoint(xVals[ii], -yVals[ii]));
+		    		// translate a little so the first point isn't right at our origin...
+		    		currPolyLine.addPoint(new WorldPoint(xVals[ii] + 5.0f, -yVals[ii] + 5.0f));
 		    	}
 		    	
 		    	elements.add(new PolyLine(currPolyLine));
@@ -172,5 +173,20 @@ public class LevelCanvas extends JPanel {
 	public void updateForViewportChange(final Point point) {
 		
 		bipedRef.setOffset(point);
+	}
+	
+	public boolean hitTest(final WorldPoint point) {
+		
+		boolean retVal = false;
+		for(DrawableElement element : elements) {
+			
+			if(element.hitTest(point, zoomFactor)) {
+				
+				retVal = true;
+				break;
+			}
+		}
+		
+		return retVal;
 	}
 }

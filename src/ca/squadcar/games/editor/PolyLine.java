@@ -1,5 +1,6 @@
 package ca.squadcar.games.editor;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,7 @@ public class PolyLine extends DrawableElement {
 	private ArrayList<WorldPoint> points;
 	private int pointSize;
 	private int id;
+	private WorldPoint lastHitPoint;
 	
 	public PolyLine() {
 		
@@ -43,6 +45,8 @@ public class PolyLine extends DrawableElement {
 		
 		// store an ID so we can name it within the level file next time
 		id = PolyLine.counter++;
+		
+		lastHitPoint = null;
 	}
 	
 	// need to scale this properly for zoom and what not
@@ -71,6 +75,14 @@ public class PolyLine extends DrawableElement {
 			}
 			
 			gfx.drawPolyline(tempX, tempY, points.size());
+			
+			if(lastHitPoint != null) {
+				
+				Color temp = gfx.getColor();
+				gfx.setColor(Color.RED);
+				gfx.drawOval(Math.round(lastHitPoint.x * zoomFactor) - pointSize / 2, Math.round(lastHitPoint.y * zoomFactor) - pointSize / 2, pointSize, pointSize);
+				gfx.setColor(temp);
+			}
 		}
 	}
 	
@@ -98,5 +110,29 @@ public class PolyLine extends DrawableElement {
 		}
 		section.putAll("x", xPoints.toArray());
 		section.putAll("y", yPoints.toArray());
+	}
+
+	@Override
+	public boolean hitTest(final WorldPoint point, float zoomFactor) {
+		
+		boolean aHit = false;
+		lastHitPoint = null;
+		double pointSizeSquared = Math.pow((pointSize / zoomFactor), 2);
+		for(WorldPoint testPoint : points) {
+			
+			if((Math.pow(testPoint.x - point.x, 2) + Math.pow(testPoint.y - point.y, 2)) <= pointSizeSquared) {
+				
+				aHit = true;
+				lastHitPoint = testPoint;
+				break;
+			}
+		}
+		
+		return aHit;
+	}
+	
+	public WorldPoint getHitPoint() {
+		
+		return lastHitPoint;
 	}
 }

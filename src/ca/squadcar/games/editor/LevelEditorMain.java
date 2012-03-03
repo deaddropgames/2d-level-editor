@@ -46,6 +46,8 @@ import javax.swing.JButton;
 
 import org.ini4j.Ini;
 import org.ini4j.InvalidFileFormatException;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class LevelEditorMain {
 	
@@ -57,6 +59,7 @@ public class LevelEditorMain {
 	private JLabel lblLeftStatuslabel;
 	private JLabel lblRightStatuslabel;
 	private JToggleButton tglbtnLineMode;
+	private JToggleButton tglbtnEditMode;
 	private JScrollPane scrollPane;
 	private JButton btnZoomIn;
 	private JButton btnZoomOut;
@@ -114,9 +117,20 @@ public class LevelEditorMain {
 	 */
 	private void initialize() {
 		frmSquadcarGamesLevel = new JFrame();
+		frmSquadcarGamesLevel.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent arg0) {
+				
+				if(!checkSavedChanges()) {
+					
+					return;
+				}
+				System.exit(0);
+			}
+		});
 		frmSquadcarGamesLevel.setTitle(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.frmSquadcarGamesLevel.title")); //$NON-NLS-1$ //$NON-NLS-2$
 		frmSquadcarGamesLevel.setBounds(100, 100, 800, 600);
-		frmSquadcarGamesLevel.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frmSquadcarGamesLevel.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		
 		JMenuBar menuBar = new JMenuBar();
 		frmSquadcarGamesLevel.setJMenuBar(menuBar);
@@ -128,6 +142,11 @@ public class LevelEditorMain {
 		mntmQuit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
 		mntmQuit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				
+				if(!checkSavedChanges()) {
+					
+					return;
+				}
 				System.exit(0);
 			}
 		});
@@ -172,6 +191,8 @@ public class LevelEditorMain {
 								ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.title"), 
 								JOptionPane.ERROR_MESSAGE);
 					}
+					
+					currFilename = levelFile.getAbsolutePath();
 					
 					canvas.repaint();
 				}
@@ -239,14 +260,19 @@ public class LevelEditorMain {
 		tglbtnLineMode = new JToggleButton(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.tglbtnLineMode.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		tglbtnLineMode.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent evt) {
+				
 				if(evt.getStateChange() == ItemEvent.SELECTED) {
+					
 					canvas.setCursor(Cursor.CROSSHAIR_CURSOR);
 					inDrawingMode = true;
 					lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.drawingModeOn"));
+					tglbtnEditMode.setSelected(false);
 				} else {
+					
 					canvas.setCursor(Cursor.DEFAULT_CURSOR);
 					inDrawingMode = false;
 					endCurrPolyLine();
+					tglbtnEditMode.setSelected(true);
 				}
 			}
 		});
@@ -276,6 +302,27 @@ public class LevelEditorMain {
 				updateForZoom();
 			}
 		});
+		
+		tglbtnEditMode = new JToggleButton(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.tglbtnEdit.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		tglbtnEditMode.setSelected(true);
+		tglbtnEditMode.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent evt) {
+				
+				if(evt.getStateChange() == ItemEvent.SELECTED) {
+					
+					canvas.setCursor(Cursor.DEFAULT_CURSOR);
+					inDrawingMode = false;
+					endCurrPolyLine();
+					lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.editModeOn"));
+					tglbtnLineMode.setSelected(false);
+				} else {
+					
+					lblLeftStatuslabel.setText("");
+					tglbtnLineMode.setSelected(true);
+				}
+			}
+		});
+		toolBar.add(tglbtnEditMode);
 		toolBar.add(btnZoomIn);
 		
 		btnZoomOut = new JButton(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnZoomOut.text")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -387,37 +434,55 @@ public class LevelEditorMain {
 			@Override
 			public void mouseClicked(MouseEvent evt) {
 				
-				if(!inDrawingMode) {
-					
-					return;
-				}
+				if(inDrawingMode) {
 				
-				// left click means add a point
-				if(evt.getButton() == MouseEvent.BUTTON1) {
-					
-					WorldPoint point = new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor));
-					if(currPolyLine == null) {
+					// left click means add a point
+					if(evt.getButton() == MouseEvent.BUTTON1) {
 						
-						currPolyLine = new PolyLine(point);
-						canvas.setTempDrawableElement(currPolyLine);
-						lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.endPolyLineTip"));
-					} else {
+						WorldPoint point = new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor));
+						if(currPolyLine == null) {
+							
+							currPolyLine = new PolyLine(point);
+							canvas.setTempDrawableElement(currPolyLine);
+							lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.endPolyLineTip"));
+						} else {
+							
+							currPolyLine.addPoint(point);
+						}
 						
-						currPolyLine.addPoint(point);
+						unsavedChanges = true;
+					} else if(evt.getButton() == MouseEvent.BUTTON3) { // right click means end polyline
+						
+						endCurrPolyLine();
 					}
+				} else {
 					
-					unsavedChanges = true;
-				} else if(evt.getButton() == MouseEvent.BUTTON3) { // right click means end polyline
-					
-					endCurrPolyLine();
+					// in edit mode
+					// see if we hit an element that can be edited
+					if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
+						
+						// TODO
+					}
 				}
 				
 				canvas.repaint();
-			}
+			} 
 		});
 		canvas.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseMoved(MouseEvent evt) {
+				
+				if(!inDrawingMode) {
+					
+					if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
+						
+						canvas.setCursor(Cursor.HAND_CURSOR);
+					} else {
+						
+						canvas.setCursor(Cursor.DEFAULT_CURSOR);
+					}
+				}
+				
 				lblRightStatuslabel.setText(String.format("(%.2f, %.2f)", (evt.getPoint().x / zoomFactor), (-evt.getPoint().y / zoomFactor)));
 			}
 		});
@@ -589,6 +654,7 @@ public class LevelEditorMain {
 		canvas.repaint();
 		currFilename = null;
 		unsavedChanges = false;
+		scrollPane.getViewport().setViewPosition(new Point(0, 0));
 	}
 	
 	private boolean checkSavedChanges() {
