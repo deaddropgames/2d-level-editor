@@ -20,6 +20,7 @@ import javax.swing.JSeparator;
 import java.util.ResourceBundle;
 import java.awt.BorderLayout;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JToolBar;
 import javax.swing.JScrollPane;
@@ -36,42 +37,49 @@ import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 
 import javax.swing.JButton;
 
-import org.ini4j.Ini;
-import org.ini4j.InvalidFileFormatException;
+import com.google.gson.Gson;
+
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public class LevelEditorMain {
 	
-	final private String[] reservedFilenames = {"editor.ini", "config.ini", "test.ini"};
+	final private String[] reservedFilenames = {"biped.json", "draw.json", "level.json", "ski.json", "conf.json"};
 	final private String defaultLevelDir = "levels/";
-	final private String defaultTestLevelFilename = "levels/test.ini";
+	final private String defaultTestLevelFilename = "levels/test.json";
+	final private String editorConfigFilename = "conf/editor.json";
 
 	private JFrame frmSquadcarGamesLevel;
 	private JLabel lblLeftStatuslabel;
 	private JLabel lblRightStatuslabel;
-	private JToggleButton tglbtnLineMode;
-	private JToggleButton tglbtnEditMode;
+
+	private JToggleButton tglbtnSelect;
+	private JToggleButton tglbtnAddLine;
+	private JToggleButton tglbtnAddCurve;
+	
 	private JScrollPane scrollPane;
 	private JButton btnZoomIn;
 	private JButton btnZoomOut;
 	
 	private LevelCanvas canvas;
 	private boolean inDrawingMode;
-	private LevelEditorSettings settings;
+	private EditorSettings editorSettings;
 	private float zoomFactor;
-	private PolyLine currPolyLine;
 	private String currFilename;
 	private boolean unsavedChanges;
 	private Point viewportCentre;
+	
+	// drawable element references
+	private WorldPoint lastPoint;
+	private QuadraticBezierCurve currCurve;
 
 	/**
 	 * Launch the application.
@@ -92,17 +100,38 @@ public class LevelEditorMain {
 	/**
 	 * Create the application.
 	 */
-	public LevelEditorMain() {
+	public LevelEditorMain() throws IOException {
 		
 		zoomFactor = 10.0f;
-		currPolyLine = null;
 		
 		inDrawingMode = false;
 		
-		settings = new LevelEditorSettings();
-		if(!settings.loadFromFile("conf/editor.ini")) {
+		editorSettings = new EditorSettings();
+		BufferedReader br = null;
+		try {
 			
-			System.err.println("Failed to load the input settings.");
+			br = new BufferedReader(new FileReader(editorConfigFilename));
+			StringBuilder sb = new StringBuilder();
+			String line = br.readLine();
+			while (line != null) {
+				
+	            sb.append(line);
+	            sb.append("\n");
+	            line = br.readLine();
+	        }
+			
+			Gson gson = new Gson();
+			editorSettings = gson.fromJson(sb.toString(), EditorSettings.class);
+		} catch(Exception ex) {
+			
+			ex.printStackTrace();
+			editorSettings = new EditorSettings();
+		} finally {
+			
+			if(br != null) {
+				
+				br.close();
+			}
 		}
 		
 		currFilename = null;
@@ -177,7 +206,7 @@ public class LevelEditorMain {
 				JFileChooser fc = new JFileChooser(new File(defaultLevelDir));
 				FileNameExtensionFilter filter = new FileNameExtensionFilter(
 						ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.levelFiles.fileType.text"), 
-						"ini");
+						"json");
 				fc.setFileFilter(filter);
 				int returnVal = fc.showOpenDialog(frmSquadcarGamesLevel);
 				if(returnVal == JFileChooser.APPROVE_OPTION) {
@@ -193,6 +222,8 @@ public class LevelEditorMain {
 					}
 					
 					currFilename = levelFile.getAbsolutePath();
+					
+					unsavedChanges = false;
 					
 					canvas.repaint();
 				}
@@ -257,28 +288,8 @@ public class LevelEditorMain {
 		toolBar.setFloatable(false);
 		frmSquadcarGamesLevel.getContentPane().add(toolBar, BorderLayout.NORTH);
 		
-		tglbtnLineMode = new JToggleButton(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.tglbtnLineMode.text")); //$NON-NLS-1$ //$NON-NLS-2$
-		tglbtnLineMode.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent evt) {
-				
-				if(evt.getStateChange() == ItemEvent.SELECTED) {
-					
-					canvas.setCursor(Cursor.CROSSHAIR_CURSOR);
-					inDrawingMode = true;
-					lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.drawingModeOn"));
-					tglbtnEditMode.setSelected(false);
-				} else {
-					
-					canvas.setCursor(Cursor.DEFAULT_CURSOR);
-					inDrawingMode = false;
-					endCurrPolyLine();
-					tglbtnEditMode.setSelected(true);
-				}
-			}
-		});
-		toolBar.add(tglbtnLineMode);
-		
-		btnZoomIn = new JButton(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnZoomIn.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		btnZoomIn = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/zoom_in.png")));
+		btnZoomIn.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnZoomIn.toolTip"));
 		btnZoomIn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {	
 				
@@ -302,30 +313,10 @@ public class LevelEditorMain {
 				updateForZoom();
 			}
 		});
-		
-		tglbtnEditMode = new JToggleButton(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.tglbtnEdit.text")); //$NON-NLS-1$ //$NON-NLS-2$
-		tglbtnEditMode.setSelected(true);
-		tglbtnEditMode.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent evt) {
-				
-				if(evt.getStateChange() == ItemEvent.SELECTED) {
-					
-					canvas.setCursor(Cursor.DEFAULT_CURSOR);
-					inDrawingMode = false;
-					endCurrPolyLine();
-					lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.editModeOn"));
-					tglbtnLineMode.setSelected(false);
-				} else {
-					
-					lblLeftStatuslabel.setText("");
-					tglbtnLineMode.setSelected(true);
-				}
-			}
-		});
-		toolBar.add(tglbtnEditMode);
 		toolBar.add(btnZoomIn);
 		
-		btnZoomOut = new JButton(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnZoomOut.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		btnZoomOut = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/zoom_out.png")));
+		btnZoomOut.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnZoomOut.toolTip"));
 		btnZoomOut.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
@@ -361,7 +352,8 @@ public class LevelEditorMain {
 		});
 		toolBar.add(btnZoomOut);
 		
-		JButton btnTestLevel = new JButton(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnTestLevel.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JButton btnTestLevel = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/application_go.png")));
+		btnTestLevel.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnTestLevel.toolTip"));
 		btnTestLevel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
@@ -374,7 +366,7 @@ public class LevelEditorMain {
 					return;
 				}
 				
-				if(settings.getSimJar() == null || settings.getSimJar().isEmpty()) {
+				if(editorSettings.simJar == null || editorSettings.simJar.isEmpty()) {
 					
 					JOptionPane.showMessageDialog(frmSquadcarGamesLevel, 
 							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnTestLevel.emptySimJar.text"),
@@ -383,19 +375,19 @@ public class LevelEditorMain {
 					return;
 				}
 				
-				File simJar = new File(settings.getSimJar());
+				File simJar = new File(editorSettings.simJar);
 				if(!simJar.exists()) {
 					
 					JOptionPane.showMessageDialog(frmSquadcarGamesLevel, 
 							String.format(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnTestLevel.simJarNotExists.text"),
-									settings.getSimJar()),
+									editorSettings.simJar),
 							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnTestLevel.simJarNotExists.title"),
 							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				
-				// save the current level to test.ini
-				// TODO: eventually we may want to handle more arguments...for now we ignore the ${level} param and just use test.ini
+				// save the current level to test.json
+				// TODO: eventually we may want to handle more arguments...for now we ignore the ${level} param and just use test.json
 				File testFile = new File(defaultTestLevelFilename);
 				saveLevel(defaultTestLevelFilename);
 				
@@ -440,29 +432,65 @@ public class LevelEditorMain {
 					if(evt.getButton() == MouseEvent.BUTTON1) {
 						
 						WorldPoint point = new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor));
-						if(currPolyLine == null) {
+						unsavedChanges = true;
+						
+						// if there isn't a start point yet, add that first
+						if(lastPoint == null) {
 							
-							currPolyLine = new PolyLine(point);
-							canvas.setTempDrawableElement(currPolyLine);
-							lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.endPolyLineTip"));
+							canvas.addDrawableElement(point);
+							if(tglbtnAddLine.isSelected()) {
+								
+								lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.lineMode"));
+							} else if(tglbtnAddCurve.isSelected()) {
+								
+								currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
+								canvas.setTempDrawableElement(currCurve);
+								lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
+							}
 						} else {
 							
-							currPolyLine.addPoint(point);
+							if(tglbtnAddLine.isSelected()) {
+								
+								// assume the last point is the line start
+								canvas.addDrawableElement(new Line(lastPoint, point));
+							} else if(tglbtnAddCurve.isSelected()) {
+								
+								if(currCurve == null) {
+									
+									currCurve = new QuadraticBezierCurve(lastPoint, editorSettings.numCurveSegments);
+									currCurve.addPoint(point);
+									canvas.setTempDrawableElement(currCurve);
+									lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
+								} else {
+									
+									currCurve.addPoint(point);
+									if(currCurve.pointsCount() == 3) {
+										
+										canvas.addDrawableElement(new QuadraticBezierCurve(currCurve));
+										currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
+										canvas.setTempDrawableElement(currCurve);
+										lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
+									} else {
+									
+										lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
+									}
+								}
+							}
 						}
 						
-						unsavedChanges = true;
-					} else if(evt.getButton() == MouseEvent.BUTTON3) { // right click means end polyline
+						// save for later...
+						lastPoint = new WorldPoint(point);
 						
-						endCurrPolyLine();
+						unsavedChanges = true;
 					}
 				} else {
 					
 					// in edit mode
 					// see if we hit an element that can be edited
-					if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
+					//if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
 						
 						// TODO
-					}
+					//}
 				}
 				
 				canvas.repaint();
@@ -474,20 +502,21 @@ public class LevelEditorMain {
 				
 				if(!inDrawingMode) {
 					
+					/* TODO
 					if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
 						
 						canvas.setCursor(Cursor.HAND_CURSOR);
 					} else {
 						
 						canvas.setCursor(Cursor.DEFAULT_CURSOR);
-					}
+					}*/
 				}
 				
 				lblRightStatuslabel.setText(String.format("(%.2f, %.2f)", (evt.getPoint().x / zoomFactor), (-evt.getPoint().y / zoomFactor)));
 			}
 		});
 		
-		canvas.setCanvasDimension(settings.getCanvisSize());
+		canvas.setCanvasDimension(new Dimension(editorSettings.canvasWidth, editorSettings.canvasHeight));
 		canvas.setZoomFactor(zoomFactor);
 		
 		scrollPane = new JScrollPane(canvas);
@@ -519,28 +548,73 @@ public class LevelEditorMain {
 		});
 		
 		frmSquadcarGamesLevel.getContentPane().add(scrollPane, BorderLayout.CENTER);
-	}
+		
+		JToolBar westToolBar = new JToolBar();
+		frmSquadcarGamesLevel.getContentPane().add(westToolBar, BorderLayout.WEST);
+		westToolBar.setOrientation(SwingConstants.VERTICAL);
+		westToolBar.setFloatable(false);
+		
+		tglbtnSelect = new JToggleButton(new ImageIcon(LevelEditorMain.class.getResource("icons/cursor.png")));
+		
+		tglbtnSelect.setSelected(true);
+		tglbtnSelect.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.tglbtnSelect.toolTip"));
+		westToolBar.add(tglbtnSelect);
+		
+		tglbtnAddLine = new JToggleButton(new ImageIcon(LevelEditorMain.class.getResource("icons/chart_line_add.png")));
+		tglbtnAddLine.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.tglbtnAddLine.toolTip"));
+		westToolBar.add(tglbtnAddLine);
+		
+		tglbtnAddCurve = new JToggleButton(new ImageIcon(LevelEditorMain.class.getResource("icons/chart_curve_add.png")));
+		tglbtnAddCurve.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.tglbtnAddCurve.toolTip"));
+		westToolBar.add(tglbtnAddCurve);		
+		
+		tglbtnSelect.addActionListener(new ActionListener() {
 
-	private void endCurrPolyLine() {
+			@Override
+			public void actionPerformed(ActionEvent evt) {
+				
+				if(tglbtnSelect.isSelected()) {
+					
+					setSelectMode();
+				} else {
+					
+					// default to line mode if deselected
+					setLineMode();
+				}
+			}
+		});
 		
-		if(currPolyLine != null && currPolyLine.getPoints().size() > 1) {
-			
-			// add to our canvas permanently (deep copy)
-			canvas.addDrawableElement(new PolyLine(currPolyLine));
-			unsavedChanges = true;
-		}
+		tglbtnAddLine.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent evt) {
+				
+				if(tglbtnAddLine.isSelected()) {
+					
+					setLineMode();
+				} else {
+					
+					// default to edit mode if deselected
+					setSelectMode();
+				}
+			}
+		});
 		
-		// reset our current polyline
-		currPolyLine = null;
-		canvas.setTempDrawableElement(null);
-		
-		if(!inDrawingMode) {
-			
-			lblLeftStatuslabel.setText("");
-		} else {
-			
-			lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.drawingModeOn"));
-		}
+		tglbtnAddCurve.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent evt) {
+				
+				if(tglbtnAddCurve.isSelected()) {
+					
+					setCurveMode();
+				} else {
+					
+					// default to edit mode if deselected
+					setSelectMode();
+				}
+			}
+		});
 	}
 	
 	private void updateForZoom() {
@@ -585,7 +659,7 @@ public class LevelEditorMain {
 
 		FileNameExtensionFilter filter = new FileNameExtensionFilter(
 				ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.levelFiles.fileType.text"), 
-				"ini");
+				"json");
 		fc.setFileFilter(filter);
 		int returnVal = fc.showSaveDialog(frmSquadcarGamesLevel);
 		if(returnVal == JFileChooser.APPROVE_OPTION) {
@@ -623,7 +697,8 @@ public class LevelEditorMain {
 			return;
 		}
 		
-		try {
+		// TODO: implement using JSON
+		/*try {
 			
 			Ini ini = new Ini();
 			canvas.saveToFile(ini, settings);
@@ -645,11 +720,12 @@ public class LevelEditorMain {
 		} catch (IOException ex) {
 
 			ex.printStackTrace();
-		}
+		}*/
 	}
 	
 	private void resetLevel() {
 		
+		lastPoint = null;
 		canvas.reset();
 		canvas.repaint();
 		currFilename = null;
@@ -673,5 +749,55 @@ public class LevelEditorMain {
 		}
 		
 		return true;
+	}
+	
+	private void setSelectMode() {
+		
+		canvas.setCursor(Cursor.DEFAULT_CURSOR);
+		canvas.setTempDrawableElement(null);
+		inDrawingMode = false;
+		lastPoint = null;
+		tglbtnSelect.setSelected(true);
+		tglbtnAddLine.setSelected(false);
+		tglbtnAddCurve.setSelected(false);
+		lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.selectMode"));
+	}
+	
+	private void setLineMode() {
+		
+		canvas.setCursor(Cursor.CROSSHAIR_CURSOR);
+		canvas.setTempDrawableElement(null);
+		currCurve = null;
+		inDrawingMode = true;
+		tglbtnAddLine.setSelected(true);
+		tglbtnSelect.setSelected(false);
+		tglbtnAddCurve.setSelected(false);
+		
+		if(lastPoint != null) {
+		
+			lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.lineMode"));
+		} else {
+			
+			lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.addFirstPoint"));
+		}
+	}
+	
+	private void setCurveMode() {
+		
+		canvas.setCursor(Cursor.CROSSHAIR_CURSOR);
+		canvas.setTempDrawableElement(null);
+		currCurve = null;
+		inDrawingMode = true;
+		tglbtnAddCurve.setSelected(true);
+		tglbtnSelect.setSelected(false);
+		tglbtnAddLine.setSelected(false);
+		
+		if(lastPoint != null) {
+			
+			lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
+		} else {
+			
+			lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.addFirstPoint"));
+		}
 	}
 }

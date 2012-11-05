@@ -1,0 +1,7 @@
+{
+    "canvasWidth": 505,
+    "canvasHeight": 300,
+    "simJar": "../SkiSimDist/SkiSimDesktop/SkiSimDesktop.jar",
+    "simArgs": "${level}",
+    "numCurveSegments": 10
+}

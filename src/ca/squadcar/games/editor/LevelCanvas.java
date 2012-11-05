@@ -4,8 +4,6 @@ import java.awt.Graphics;
 
 import javax.swing.JPanel;
 
-import org.ini4j.Ini;
-
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -15,10 +13,10 @@ import java.util.ArrayList;
 
 @SuppressWarnings("serial")
 public class LevelCanvas extends JPanel {
-	
-	private ArrayList<DrawableElement> elements;
+
+	private ArrayList<IDrawableElement> elements;
 	private float zoomFactor;
-	private DrawableElement temp;
+	private IDrawableElement temp;
 	private Dimension canvasDim;
 	private BipedReference bipedRef;
 	
@@ -29,10 +27,11 @@ public class LevelCanvas extends JPanel {
 		
 		setBackground(Color.WHITE);
 		
-		elements = new ArrayList<DrawableElement>();
+		elements = new ArrayList<IDrawableElement>();
 		zoomFactor = 1.0f;
 		temp = null;
 		canvasDim = null;
+		bipedRef = new BipedReference();
 		
 		reset();
 	}
@@ -42,7 +41,7 @@ public class LevelCanvas extends JPanel {
 		
 		super.paint(gfx);
 		
-		for(DrawableElement element : elements) {
+		for(IDrawableElement element : elements) {
 			
 			element.draw(gfx, zoomFactor);
 		}
@@ -51,6 +50,8 @@ public class LevelCanvas extends JPanel {
 			
 			temp.draw(gfx, zoomFactor);
 		}
+		
+		bipedRef.draw(gfx, zoomFactor);
 	}
 	
 	public void setCursor(int cursor) {
@@ -58,7 +59,7 @@ public class LevelCanvas extends JPanel {
 		setCursor(Cursor.getPredefinedCursor(cursor));
 	}
 	
-	public void addDrawableElement(final DrawableElement element) {
+	public void addDrawableElement(final IDrawableElement element) {
 		
 		elements.add(element);
 	}
@@ -79,7 +80,7 @@ public class LevelCanvas extends JPanel {
 	/**
 	 * The temp element is used to draw an element that hasn't been finalized; e.g.: the current poly line that is being drawn.
 	 */
-	public void setTempDrawableElement(DrawableElement temp) {
+	public void setTempDrawableElement(IDrawableElement temp) {
 		
 		this.temp = temp;
 	}
@@ -91,29 +92,24 @@ public class LevelCanvas extends JPanel {
 	
 	public boolean hasElements() {
 		
-		return (elements.size() > 1); // NOTE: the biped element is always there and doesn't count...
+		return (elements.size() > 0);
 	}
 	
-	public void saveToFile(Ini ini, LevelEditorSettings settings) {
-		
-		for(DrawableElement element : elements) {
-			
-			element.saveToFile(ini);
-		}
+	public void saveToJson(final String filename) {
+	
+		// TODO
 	}
 	
 	public void reset() {
 		
 		elements.clear();
-
-		bipedRef = new BipedReference();
-		elements.add(bipedRef);
 	}
 	
 	public boolean loadLevelFromFile(final File levelFile) {
 		
 		boolean retVal = true;
-		try {
+		// TODO
+		/*try {
 			
 			Ini ini = new Ini(levelFile);
 		    if(ini.isEmpty()) {
@@ -160,7 +156,7 @@ public class LevelCanvas extends JPanel {
 			
 			ex.printStackTrace();
 			return false;
-		}
+		}*/
 		
 		return retVal;
 	}
@@ -175,10 +171,10 @@ public class LevelCanvas extends JPanel {
 		bipedRef.setOffset(point);
 	}
 	
-	public boolean hitTest(final WorldPoint point) {
+	/*public boolean hitTest(final WorldPoint point) {
 		
 		boolean retVal = false;
-		for(DrawableElement element : elements) {
+		for(IDrawableElement element : elements) {
 			
 			if(element.hitTest(point, zoomFactor)) {
 				
@@ -188,5 +184,5 @@ public class LevelCanvas extends JPanel {
 		}
 		
 		return retVal;
-	}
+	}*/
 }

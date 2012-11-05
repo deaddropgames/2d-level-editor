@@ -4,9 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 
-import org.ini4j.Ini;
-
-public class BipedReference extends DrawableElement {
+public class BipedReference implements IDrawableElement {
 
 	private float height;
 	private float width;
@@ -51,13 +49,6 @@ public class BipedReference extends DrawableElement {
 		
 		gfx.setColor(temp);
 	}
-
-	@Override
-	public void saveToFile(Ini ini) {
-
-		// no-op...don't want to save this to file
-		return;
-	}
 	
 	public void setOffset(final Point point) {
 		
@@ -66,9 +57,9 @@ public class BipedReference extends DrawableElement {
 	}
 
 	@Override
-	public boolean hitTest(WorldPoint point, float zoomFactor) {
-
-		// no-op, doesn't matter...
+	public boolean hitTest(int x, int y, float zoomFactor) {
+		
+		// no-op, doesn't matter
 		return false;
 	}
 }

@@ -1,17 +1,13 @@
 package ca.squadcar.games.editor;
 
-public class WorldPoint {
+import java.awt.Graphics;
 
+public class WorldPoint implements IDrawableElement, IBoundingBox {
+	
 	public float x;
 	public float y;
 	
-	public WorldPoint() {
-		
-		x = 0.0f;
-		y = 0.0f;
-	}
-	
-	public WorldPoint(float x, float y) {
+	public WorldPoint(final float x, final float y) {
 		
 		this.x = x;
 		this.y = y;
@@ -21,5 +17,40 @@ public class WorldPoint {
 		
 		this.x = point.x;
 		this.y = point.y;
+	}
+	
+	public WorldPoint mul(final float scalar) {
+		
+		return new WorldPoint(this.x * scalar, this.y * scalar);
+	}
+
+	@Override
+	public void draw(Graphics gfx, float zoomFactor) {
+		
+		// draw a circle
+		gfx.drawOval(Math.round(x * zoomFactor) - Globals.POINT_SIZE / 2, 
+				Math.round(y * zoomFactor) - Globals.POINT_SIZE / 2, 
+				Globals.POINT_SIZE, 
+				Globals.POINT_SIZE);
+	}
+
+	@Override
+	public boolean containsPoint(float x, float y) {
+		
+		// simpler to test if it doesn't contain the point, rather than if it does
+		if(Math.abs(x - this.x) > Globals.POINT_SIZE || 
+				Math.abs(y - this.y) > Globals.POINT_SIZE) {
+			
+			return false;
+		}
+		
+		return true;
+	}
+
+	@Override
+	public boolean hitTest(int x, int y, float zoomFactor) {
+		
+		// TODO Auto-generated method stub
+		return false;
 	}
 }
