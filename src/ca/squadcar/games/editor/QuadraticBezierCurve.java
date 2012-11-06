@@ -5,11 +5,11 @@ import java.util.ArrayList;
 
 public class QuadraticBezierCurve implements IDrawableElement, IBoundingBox {
 
-	private WorldPoint first;
-	private WorldPoint second;
-	private WorldPoint third;
+	public WorldPoint first;
+	public WorldPoint second;
+	public WorldPoint third;
+	public int numSegments;
 	private ArrayList<Line> lines;
-	private int numSegments;
 	
 	public QuadraticBezierCurve(final WorldPoint firstPoint, final int numSegments) {
 		
@@ -24,7 +24,7 @@ public class QuadraticBezierCurve implements IDrawableElement, IBoundingBox {
 		this.second = new WorldPoint(curve.second);
 		this.third = new WorldPoint(curve.third);
 		this.numSegments = curve.numSegments;
-		lines = new ArrayList<Line>(curve.lines);
+		this.lines = new ArrayList<Line>(curve.lines);
 	}
 	
 	public void addPoint(final WorldPoint point) {
@@ -135,6 +135,11 @@ public class QuadraticBezierCurve implements IDrawableElement, IBoundingBox {
 		lines.add(new Line(point2, third));
 	}
 	
+	public ArrayList<Line> getLines() {
+		
+		return this.lines;
+	}
+	
 	@Override
 	public void draw(Graphics gfx, float zoomFactor) {
 		
@@ -158,7 +163,7 @@ public class QuadraticBezierCurve implements IDrawableElement, IBoundingBox {
 	}
 	
 	@Override
-	public boolean hitTest(int x, int y, float zoomFactor) {
+	public boolean hitTest(float x, float y, float zoomFactor) {
 		
 		if(first == null || second == null || third == null) {
 			

@@ -4,11 +4,16 @@ import java.awt.Graphics;
 
 import javax.swing.JPanel;
 
+import com.google.gson.Gson;
+
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 
 @SuppressWarnings("serial")
@@ -95,9 +100,108 @@ public class LevelCanvas extends JPanel {
 		return (elements.size() > 0);
 	}
 	
-	public void saveToJson(final String filename) {
+	public ca.squadcar.games.export.Level getLevelForExport() {
+		
+		if(elements.size() == 0) {
+			
+			return null;
+		}
 	
-		// TODO
+		ca.squadcar.games.export.Level level = new ca.squadcar.games.export.Level();
+		
+		// assume a single polyline for now...
+		level.polyLines = new ca.squadcar.games.export.PolyLine[1];
+		level.polyLines[0] = new ca.squadcar.games.export.PolyLine();
+		
+		// we need to translate all points relative to the first
+		WorldPoint transPoint;
+		IDrawableElement firstElem = elements.get(0);
+		if(firstElem instanceof WorldPoint) {
+			
+			transPoint = new WorldPoint((WorldPoint)firstElem);
+		} else { // it's a curve
+			
+			transPoint = new WorldPoint(((QuadraticBezierCurve)firstElem).first);
+		}
+		
+		WorldPoint currPoint;
+		ArrayList<WorldPoint> points = new ArrayList<WorldPoint>();
+		points.add(new WorldPoint(0.0f, 0.0f)); // first point is always at the origin
+		boolean isFirst = true;
+		for(IDrawableElement element : elements) {
+			
+			if(isFirst) {
+				
+				isFirst = false;
+				continue;
+			}
+			
+			if(element instanceof WorldPoint) {
+				
+				currPoint = new WorldPoint((WorldPoint)element);
+				currPoint.x -= transPoint.x;
+				currPoint.y -= transPoint.y;
+				currPoint.y *= -1.0f;
+				points.add(currPoint);
+			} else if(element instanceof Line) {
+				
+				Line line = (Line)element;
+				
+				currPoint = new WorldPoint(line.end);
+				currPoint.x -= transPoint.x;
+				currPoint.y -= transPoint.y;
+				currPoint.y *= -1.0f;
+				points.add(new WorldPoint(currPoint));
+			} else if(element instanceof QuadraticBezierCurve) {
+				
+				QuadraticBezierCurve curve = (QuadraticBezierCurve)element;
+				for(Line line : curve.getLines()) {
+					
+					currPoint = new WorldPoint(line.end);
+					currPoint.x -= transPoint.x;
+					currPoint.y -= transPoint.y;
+					currPoint.y *= -1.0f;
+					points.add(new WorldPoint(currPoint));
+				}
+			}
+		}
+		
+		if(points.size() <= 1) {
+			
+			return null;
+		}
+		
+		level.polyLines[0].points = new WorldPoint[points.size()];
+		points.toArray(level.polyLines[0].points);
+		
+		return level;
+	}
+	
+	public JsonLevel getLevelForSave() {
+		
+		if(elements.size() == 0) {
+			
+			return null;
+		}
+		
+		IDrawableElement element;
+		JsonLevel level = new JsonLevel(elements.size());
+		for(int ii = 0; ii < elements.size(); ii++) {
+			
+			element = elements.get(ii);
+			if(element instanceof WorldPoint) {
+				
+				level.elements[ii] = new JsonElement((WorldPoint)element);
+			} else if(element instanceof Line) {
+				
+				level.elements[ii] = new JsonElement((Line)element);
+			} else if(element instanceof QuadraticBezierCurve) {
+
+				level.elements[ii] = new JsonElement((QuadraticBezierCurve)element);
+			}
+		}
+
+		return level;
 	}
 	
 	public void reset() {
@@ -105,60 +209,53 @@ public class LevelCanvas extends JPanel {
 		elements.clear();
 	}
 	
-	public boolean loadLevelFromFile(final File levelFile) {
+	public boolean loadLevelFromFile(final File levelFile) throws IOException {
 		
-		boolean retVal = true;
-		// TODO
-		/*try {
+		BufferedReader br = null;
+		JsonLevel jsonLevel = null;
+		try {
 			
-			Ini ini = new Ini(levelFile);
-		    if(ini.isEmpty()) {
+			br = new BufferedReader(new FileReader(levelFile));
+			StringBuilder sb = new StringBuilder();
+			String line = br.readLine();
+			while (line != null) {
 				
-		    	System.err.println(String.format("Input INI file '%s' is empty.", levelFile.getName()));
-				return false;
-			}
-		    
-		    // clear the canvas
-		    reset();
-		    
-		    // get our supported sections - currently this is just poly lines
-		    Ini.Section levelSection = ini.get("level");
-		    String[] polyLineNames = levelSection.getAll("polyline", String[].class);
-		    PolyLine currPolyLine = null;
-		    for(String polyLineName : polyLineNames) {
-		    	
-		    	// get x an y points for this line string
-		    	Ini.Section currLineStringSection = ini.get(polyLineName);
-		    	float[] xVals = currLineStringSection.getAll("x", float[].class);
-		    	float[] yVals = currLineStringSection.getAll("y", float[].class);
-		    	
-		    	// sanity check
-		    	if(xVals.length != yVals.length) {
-		    		
-		    		System.err.println(String.format("Section '%s' has uneven number of x and y values.", polyLineName));
-		    		retVal = false;
-		    		continue;
-		    	}
-		    	
-		    	currPolyLine = new PolyLine();
-		    	for(int ii = 0; ii < xVals.length; ii++) {
-			    	
-		    		// don't forget to flip the points y-vals!!
-		    		// translate a little so the first point isn't right at our origin...
-		    		currPolyLine.addPoint(new WorldPoint(xVals[ii] + 5.0f, -yVals[ii] + 5.0f));
-		    	}
-		    	
-		    	elements.add(new PolyLine(currPolyLine));
-		    	currPolyLine = null;
-		    }
-		    
+	            sb.append(line);
+	            sb.append("\n");
+	            line = br.readLine();
+	        }
+			
+			Gson gson = new Gson();
+			jsonLevel = gson.fromJson(sb.toString(), JsonLevel.class);
 		} catch(Exception ex) {
 			
 			ex.printStackTrace();
 			return false;
-		}*/
+		} finally {
+			
+			if(br != null) {
+				
+				br.close();
+			}
+		}
 		
-		return retVal;
+		if(jsonLevel == null) {
+			
+			return false;
+		}
+		
+		for(JsonElement jsonElement : jsonLevel.elements) {
+			
+			IDrawableElement element = jsonElement.toDrawableElement();
+			if(element == null) {
+				
+				return false;
+			}
+			
+			elements.add(element);
+		}
+		
+		return true;
 	}
 	
 	public Dimension getCanvasDimension() {
@@ -171,12 +268,12 @@ public class LevelCanvas extends JPanel {
 		bipedRef.setOffset(point);
 	}
 	
-	/*public boolean hitTest(final WorldPoint point) {
+	public boolean hitTest(final WorldPoint point) {
 		
 		boolean retVal = false;
 		for(IDrawableElement element : elements) {
 			
-			if(element.hitTest(point, zoomFactor)) {
+			if(element.hitTest(point.x, point.y, zoomFactor)) {
 				
 				retVal = true;
 				break;
@@ -184,5 +281,5 @@ public class LevelCanvas extends JPanel {
 		}
 		
 		return retVal;
-	}*/
+	}
 }

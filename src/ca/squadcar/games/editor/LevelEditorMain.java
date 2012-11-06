@@ -3,6 +3,7 @@ package ca.squadcar.games.editor;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.HeadlessException;
 import java.awt.Point;
 
 import javax.swing.JFrame;
@@ -39,13 +40,16 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import javax.swing.JButton;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -54,7 +58,8 @@ public class LevelEditorMain {
 	
 	final private String[] reservedFilenames = {"biped.json", "draw.json", "level.json", "ski.json", "conf.json"};
 	final private String defaultLevelDir = "levels/";
-	final private String defaultTestLevelFilename = "levels/test.json";
+	final private String defaultTestLevelFilename = "export/test.json";
+	final private String defaultExportDir = "export/";
 	final private String editorConfigFilename = "conf/editor.json";
 
 	private JFrame frmSquadcarGamesLevel;
@@ -212,13 +217,21 @@ public class LevelEditorMain {
 				if(returnVal == JFileChooser.APPROVE_OPTION) {
 
 					File levelFile = fc.getSelectedFile();
-					
-					if(!canvas.loadLevelFromFile(levelFile)) {
+					try {
 						
-						JOptionPane.showMessageDialog(frmSquadcarGamesLevel,
-								ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.text"), 
-								ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.title"), 
-								JOptionPane.ERROR_MESSAGE);
+						if(!canvas.loadLevelFromFile(levelFile)) {
+							
+							JOptionPane.showMessageDialog(frmSquadcarGamesLevel,
+									ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.text"), 
+									ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.title"), 
+									JOptionPane.ERROR_MESSAGE);
+						}
+					} catch (HeadlessException ex) {
+
+						ex.printStackTrace();
+					} catch (IOException ex) {
+
+						ex.printStackTrace();
 					}
 					
 					currFilename = levelFile.getAbsolutePath();
@@ -240,7 +253,7 @@ public class LevelEditorMain {
 				
 				if(currFilename == null) {
 
-					if(chooseLevelFilename()) {
+					if(chooseLevelFilename(defaultLevelDir)) {
 						
 						saveLevel(currFilename);
 						return;
@@ -257,7 +270,7 @@ public class LevelEditorMain {
 		mntmSaveAs.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
-				if(chooseLevelFilename()) {
+				if(chooseLevelFilename(defaultLevelDir)) {
 					
 					saveLevel(currFilename);
 				}
@@ -267,6 +280,23 @@ public class LevelEditorMain {
 		
 		JSeparator separator = new JSeparator();
 		mnFile.add(separator);
+		
+		JMenuItem mntmExport = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmExport.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		mntmExport.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent arg0) {
+
+				if(chooseLevelFilename(defaultExportDir)) {
+						
+					exportLevel(currFilename);
+					return;
+				}
+			}
+		});
+		mnFile.add(mntmExport);
+		
+		JSeparator separator_2 = new JSeparator();
+		mnFile.add(separator_2);
 		mnFile.add(mntmQuit);
 		
 		JMenu mnHelp = new JMenu(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mnHelp.text")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -389,7 +419,7 @@ public class LevelEditorMain {
 				// save the current level to test.json
 				// TODO: eventually we may want to handle more arguments...for now we ignore the ${level} param and just use test.json
 				File testFile = new File(defaultTestLevelFilename);
-				saveLevel(defaultTestLevelFilename);
+				exportLevel(defaultTestLevelFilename);
 				
 				// spawn it
 				ProcessBuilder pb = new ProcessBuilder("java", "-jar", simJar.getName(), testFile.getAbsolutePath());
@@ -635,7 +665,7 @@ public class LevelEditorMain {
 		}
 	}
 	
-	private boolean chooseLevelFilename() {
+	private boolean chooseLevelFilename(final String defaultDir) {
 		
 		// make sure there is something to save...
 		if(!canvas.hasElements()) {
@@ -654,7 +684,7 @@ public class LevelEditorMain {
 		} else {
 			
 			// default directory?
-			fc = new JFileChooser(new File(defaultLevelDir));
+			fc = new JFileChooser(new File(defaultDir));
 		}
 
 		FileNameExtensionFilter filter = new FileNameExtensionFilter(
@@ -697,30 +727,60 @@ public class LevelEditorMain {
 			return;
 		}
 		
-		// TODO: implement using JSON
-		/*try {
+		// NOTE: the json level class is different from those that can be exported
+		JsonLevel level = canvas.getLevelForSave();
+		if(level == null) {
 			
-			Ini ini = new Ini();
-			canvas.saveToFile(ini, settings);
-			if(filename.endsWith(".ini")) {
-				
-				ini.store(new File(filename));
-			} else {
-				
-				ini.store(new File(filename + ".ini"));
-			}
-			lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.levelSaved"));
-			if(filename != defaultTestLevelFilename) {
-				
-				unsavedChanges = false;
-			}
-		} catch (InvalidFileFormatException ex) {
+			System.err.println("Failed to get the JSON level for saving.");
+			return;
+		}
+		
+		Gson json = new GsonBuilder().setPrettyPrinting().create();
+		try {
 
-			ex.printStackTrace();
-		} catch (IOException ex) {
+			String data = json.toJson(level);
+			BufferedWriter out = new BufferedWriter(new FileWriter(filename));
+			out.write(data);
+			out.close();
+		} catch (IOException e) {
 
-			ex.printStackTrace();
-		}*/
+			e.printStackTrace();
+		}
+		
+		unsavedChanges = false;
+	}
+	
+	/**
+	 * Exports the file into a format that the games can read
+	 */
+	private void exportLevel(final String filename) {
+		
+		if(filename == null) {
+			
+			System.err.println("Level cannot be saved with no elements.");
+			return;
+		}
+		
+		// NOTE: the export level class is different from those that can be saved
+		ca.squadcar.games.export.Level level = canvas.getLevelForExport();
+		if(level == null) {
+			
+			System.err.println("Level cannot be exported with no elements.");
+			return;
+		}
+		
+		// we still consider their to be saved changes on an export...
+		Gson json = new GsonBuilder().setPrettyPrinting().create();
+		try {
+
+			String data = json.toJson(level);
+			BufferedWriter out = new BufferedWriter(new FileWriter(filename));
+			out.write(data);
+			out.close();
+		} catch (IOException e) {
+
+			e.printStackTrace();
+		}
 	}
 	
 	private void resetLevel() {

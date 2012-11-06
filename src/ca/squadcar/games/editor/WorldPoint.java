@@ -48,7 +48,7 @@ public class WorldPoint implements IDrawableElement, IBoundingBox {
 	}
 
 	@Override
-	public boolean hitTest(int x, int y, float zoomFactor) {
+	public boolean hitTest(float x, float y, float zoomFactor) {
 		
 		// TODO Auto-generated method stub
 		return false;

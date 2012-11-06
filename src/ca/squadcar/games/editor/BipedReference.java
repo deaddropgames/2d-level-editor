@@ -57,7 +57,7 @@ public class BipedReference implements IDrawableElement {
 	}
 
 	@Override
-	public boolean hitTest(int x, int y, float zoomFactor) {
+	public boolean hitTest(float x, float y, float zoomFactor) {
 		
 		// no-op, doesn't matter
 		return false;
