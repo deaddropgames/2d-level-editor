@@ -2,7 +2,7 @@ package ca.squadcar.games.editor;
 
 import java.awt.Graphics;
 
-public class WorldPoint implements IDrawableElement, IBoundingBox {
+public class WorldPoint implements IDrawableElement {
 	
 	public float x;
 	public float y;
@@ -35,22 +35,14 @@ public class WorldPoint implements IDrawableElement, IBoundingBox {
 	}
 
 	@Override
-	public boolean containsPoint(float x, float y) {
+	public boolean hitTest(float x, float y) {
 		
 		// simpler to test if it doesn't contain the point, rather than if it does
-		if(Math.abs(x - this.x) > Globals.POINT_SIZE || 
-				Math.abs(y - this.y) > Globals.POINT_SIZE) {
+		/*if(Math.abs(x - this.x) > Globals.POINT_SIZE || Math.abs(y - this.y) > Globals.POINT_SIZE) {
 			
 			return false;
-		}
+		}*/
 		
-		return true;
-	}
-
-	@Override
-	public boolean hitTest(float x, float y, float zoomFactor) {
-		
-		// TODO Auto-generated method stub
 		return false;
 	}
 }

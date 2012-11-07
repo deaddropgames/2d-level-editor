@@ -1,15 +1,17 @@
 package ca.squadcar.games.editor;
 
 import java.awt.Graphics;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
-public class QuadraticBezierCurve implements IDrawableElement, IBoundingBox {
+public class QuadraticBezierCurve implements IDrawableElement {
 
 	public WorldPoint first;
 	public WorldPoint second;
 	public WorldPoint third;
 	public int numSegments;
 	private ArrayList<Line> lines;
+	private Rectangle2D.Float boundingBox;
 	
 	public QuadraticBezierCurve(final WorldPoint firstPoint, final int numSegments) {
 		
@@ -25,6 +27,21 @@ public class QuadraticBezierCurve implements IDrawableElement, IBoundingBox {
 		this.third = new WorldPoint(curve.third);
 		this.numSegments = curve.numSegments;
 		this.lines = new ArrayList<Line>(curve.lines);
+		
+		initBoundingBox();
+	}
+	
+	private void initBoundingBox() {
+		
+		float minX = Math.min(Math.min(first.x, second.x), third.x);
+		float minY = Math.min(Math.min(first.y, second.y), third.y);
+		float maxX = Math.max(Math.max(first.x, second.x), third.x);
+		float maxY = Math.max(Math.max(first.y, second.y), third.y);
+		
+		this.boundingBox = new Rectangle2D.Float(minX, 
+				minY, 
+				Math.abs(maxX - minX), 
+				Math.abs(maxY - minY));
 	}
 	
 	public void addPoint(final WorldPoint point) {
@@ -38,6 +55,7 @@ public class QuadraticBezierCurve implements IDrawableElement, IBoundingBox {
 		} else if(third == null) {
 			
 			third = new WorldPoint(point);
+			initBoundingBox();
 		} else {
 			
 			System.err.println("Oops, tried to add a point to a completed curve.");
@@ -50,6 +68,10 @@ public class QuadraticBezierCurve implements IDrawableElement, IBoundingBox {
 	public void setFirstPoint(final WorldPoint point) {
 		
 		first = new WorldPoint(point);
+		
+		// re-create bounding box
+		initBoundingBox();
+		
 		init();
 	}
 	
@@ -62,6 +84,10 @@ public class QuadraticBezierCurve implements IDrawableElement, IBoundingBox {
 	public void setThirdPoint(final WorldPoint point) {
 		
 		third = new WorldPoint(point);
+		
+		// re-create bounding box
+		initBoundingBox();
+		
 		init();
 	}
 	
@@ -141,7 +167,7 @@ public class QuadraticBezierCurve implements IDrawableElement, IBoundingBox {
 	}
 	
 	@Override
-	public void draw(Graphics gfx, float zoomFactor) {
+	public void draw(Graphics gfx, final float zoomFactor) {
 		
 		for(Line line : lines) {
 			
@@ -153,24 +179,43 @@ public class QuadraticBezierCurve implements IDrawableElement, IBoundingBox {
 			
 			second.draw(gfx, zoomFactor);
 		}
-	}
-
-	@Override
-	public boolean containsPoint(float x, float y) {
 		
-		// TODO
-		return false;
+		/* for testing...
+		if(boundingBox != null) {
+			
+			gfx.drawRect(Math.round(boundingBox.x * zoomFactor), 
+					Math.round(boundingBox.y * zoomFactor), 
+					Math.round(boundingBox.width * zoomFactor), 
+					Math.round(boundingBox.height * zoomFactor));
+		}
+		*/
 	}
 	
 	@Override
-	public boolean hitTest(float x, float y, float zoomFactor) {
+	public boolean hitTest(float x, float y) {
 		
-		if(first == null || second == null || third == null) {
+		if(pointsCount() != 3 || numSegments <= 0 || boundingBox == null) {
 			
 			return false;
 		}
 		
-		// TODO
+		// if we are within the bounding box, check if we clicked any of the points or the lines
+		if(boundingBox.contains(x, y)) {
+			
+			if(first.hitTest(x, y) || second.hitTest(x, y) || third.hitTest(x, y)) {
+				
+				return true;
+			}
+			
+			for(Line line : lines) {
+				
+				if(line.hitTest(x, y)) {
+					
+					return true;
+				}
+			}
+		}
+
 		return false;
 	}
 }

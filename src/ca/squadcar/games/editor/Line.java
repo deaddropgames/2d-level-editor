@@ -1,48 +1,48 @@
 package ca.squadcar.games.editor;
 
 import java.awt.Graphics;
+import java.awt.geom.Rectangle2D;
 
-public class Line implements IDrawableElement, IBoundingBox {
+public class Line implements IDrawableElement {
 	
 	public WorldPoint start;
 	public WorldPoint end;
+	
+	private Rectangle2D.Float boundingBox;
 	
 	public Line(final WorldPoint start, final WorldPoint end) {
 		
 		this.start = new WorldPoint(start);
 		this.end = new WorldPoint(end);
+		
+		initBoundingBox();
 	}
 	
 	public Line(final Line line) {
 		
 		this.start = new WorldPoint(line.start);
 		this.end = new WorldPoint(line.end);
+		
+		initBoundingBox();
 	}
 	
 	public void setEnd(final WorldPoint end) {
 
 		this.end = new WorldPoint(end);
+		
+		initBoundingBox();
+	}
+	
+	private void initBoundingBox() {
+		
+		this.boundingBox = new Rectangle2D.Float(Math.min(start.x, end.x), 
+				Math.min(start.y, end.y), 
+				Math.abs(start.x - end.x), 
+				Math.abs(start.y - end.y));
 	}
 
 	@Override
-	public boolean containsPoint(float x, float y) {
-		
-		float minX = Math.min(start.x, end.x);
-		float maxX = Math.max(start.x, end.x);
-		float minY = Math.min(start.y, end.y);
-		float maxY = Math.max(start.y, end.y);
-		
-		// simpler to test if it doesn't contain the point, rather than if it does
-		if(x < minX || x > maxX || y < minY || y > maxY) {
-			
-			return false;
-		}
-		
-		return true;
-	}
-
-	@Override
-	public void draw(Graphics gfx, float zoomFactor) {
+	public void draw(Graphics gfx, final float zoomFactor) {
 		
 		gfx.drawLine(Math.round(start.x * zoomFactor), 
 				Math.round(start.y * zoomFactor), 
@@ -51,12 +51,28 @@ public class Line implements IDrawableElement, IBoundingBox {
 		
 		// we only draw the end, since the previous element in the chain will draw this one...
 		end.draw(gfx, zoomFactor);
+		
+		/* for testing
+		if(boundingBox != null) {
+			
+			gfx.drawRect(Math.round(boundingBox.x * zoomFactor), 
+					Math.round(boundingBox.y * zoomFactor), 
+					Math.round(boundingBox.width * zoomFactor), 
+					Math.round(boundingBox.height * zoomFactor));
+		}
+		*/
 	}
 
 	@Override
-	public boolean hitTest(float x, float y, float zoomFactor) {
+	public boolean hitTest(float x, float y) {
 		
-		// TODO Auto-generated method stub
-		return false;
+		if(boundingBox == null) {
+			
+			return false;
+		}
+		
+		// TODO if its in the bounding box, perhaps test how far from the line it is?
+		
+		return boundingBox.contains(x, y);
 	}
 }

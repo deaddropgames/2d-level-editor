@@ -33,7 +33,7 @@ public class LevelCanvas extends JPanel {
 		setBackground(Color.WHITE);
 		
 		elements = new ArrayList<IDrawableElement>();
-		zoomFactor = 1.0f;
+		zoomFactor = 10.0f;
 		temp = null;
 		canvasDim = null;
 		bipedRef = new BipedReference();
@@ -80,6 +80,21 @@ public class LevelCanvas extends JPanel {
 			dim.width *= zoomFactor;
 			setPreferredSize(dim);
 		}
+	}
+	
+	public float getZoomFactor() {
+		
+		return zoomFactor;
+	}
+	
+	public void zoomIn(final int factor) {
+		
+		zoomFactor *= factor;
+	}
+	
+	public void zoomOut(final int factor) {
+		
+		zoomFactor /= factor;
 	}
 	
 	/**
@@ -270,16 +285,15 @@ public class LevelCanvas extends JPanel {
 	
 	public boolean hitTest(final WorldPoint point) {
 		
-		boolean retVal = false;
+		// convert the mouse point to its world point
 		for(IDrawableElement element : elements) {
 			
-			if(element.hitTest(point.x, point.y, zoomFactor)) {
+			if(element.hitTest(point.x, point.y)) {
 				
-				retVal = true;
-				break;
+				return true;
 			}
 		}
 		
-		return retVal;
+		return false;
 	}
 }

@@ -77,7 +77,6 @@ public class LevelEditorMain {
 	private LevelCanvas canvas;
 	private boolean inDrawingMode;
 	private EditorSettings editorSettings;
-	private float zoomFactor;
 	private String currFilename;
 	private boolean unsavedChanges;
 	private Point viewportCentre;
@@ -106,8 +105,6 @@ public class LevelEditorMain {
 	 * Create the application.
 	 */
 	public LevelEditorMain() throws IOException {
-		
-		zoomFactor = 10.0f;
 		
 		inDrawingMode = false;
 		
@@ -189,12 +186,7 @@ public class LevelEditorMain {
 		mntmNew.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
-				if(!checkSavedChanges()) {
-					
-					return;
-				}
-				
-				resetLevel();
+				newLevel();
 			}
 		});
 		mnFile.add(mntmNew);
@@ -203,43 +195,7 @@ public class LevelEditorMain {
 		mntmOpen.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
-				if(!checkSavedChanges()) {
-					
-					return;
-				}
-				
-				JFileChooser fc = new JFileChooser(new File(defaultLevelDir));
-				FileNameExtensionFilter filter = new FileNameExtensionFilter(
-						ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.levelFiles.fileType.text"), 
-						"json");
-				fc.setFileFilter(filter);
-				int returnVal = fc.showOpenDialog(frmSquadcarGamesLevel);
-				if(returnVal == JFileChooser.APPROVE_OPTION) {
-
-					File levelFile = fc.getSelectedFile();
-					try {
-						
-						if(!canvas.loadLevelFromFile(levelFile)) {
-							
-							JOptionPane.showMessageDialog(frmSquadcarGamesLevel,
-									ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.text"), 
-									ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.title"), 
-									JOptionPane.ERROR_MESSAGE);
-						}
-					} catch (HeadlessException ex) {
-
-						ex.printStackTrace();
-					} catch (IOException ex) {
-
-						ex.printStackTrace();
-					}
-					
-					currFilename = levelFile.getAbsolutePath();
-					
-					unsavedChanges = false;
-					
-					canvas.repaint();
-				}
+				openLevel();
 			}
 		});
 		mnFile.add(mntmOpen);
@@ -251,16 +207,7 @@ public class LevelEditorMain {
 		mntmSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
-				if(currFilename == null) {
-
-					if(chooseLevelFilename(defaultLevelDir)) {
-						
-						saveLevel(currFilename);
-						return;
-					}
-				}
-				
-				saveLevel(currFilename);
+				saveLevel();
 			}
 		});
 		mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
@@ -270,10 +217,7 @@ public class LevelEditorMain {
 		mntmSaveAs.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
-				if(chooseLevelFilename(defaultLevelDir)) {
-					
-					saveLevel(currFilename);
-				}
+				saveLevelAs();
 			}
 		});
 		mnFile.add(mntmSaveAs);
@@ -339,10 +283,55 @@ public class LevelEditorMain {
 				viewportCentre.x -= vpSize.width / 2;
 				viewportCentre.y -= vpSize.height / 2;
 				
-				zoomFactor *= 2;	
+				canvas.zoomIn(2);	
 				updateForZoom();
 			}
 		});
+		
+		JButton btnNew = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/page.png")));
+		btnNew.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				newLevel();
+			}
+		});
+		btnNew.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnNew.toolTip"));
+		toolBar.add(btnNew);
+		
+		JButton btnOpen = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/folder_page.png")));
+		btnOpen.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				openLevel();
+			}
+		});
+		btnOpen.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnOpen.toolTip"));
+		toolBar.add(btnOpen);
+		
+		JButton btnSave = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/page_save.png")));
+		btnSave.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				saveLevel();
+			}
+		});
+		btnSave.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnSave.toolTip"));
+		toolBar.add(btnSave);
+		
+		JButton btnSaveAs = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/disk.png")));
+		btnSaveAs.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				saveLevelAs();
+			}
+		});
+		btnSaveAs.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnSaveAs.toolTip"));
+		toolBar.add(btnSaveAs);
+		
+		JSeparator separator_4 = new JSeparator();
+		separator_4.setOrientation(SwingConstants.VERTICAL);
+		separator_4.setMaximumSize(new Dimension(10, 16));
+		toolBar.add(separator_4);
 		toolBar.add(btnZoomIn);
 		
 		btnZoomOut = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/zoom_out.png")));
@@ -376,13 +365,14 @@ public class LevelEditorMain {
 					viewportCentre.y = 0;
 				}
 				
-				zoomFactor /= 2;
+				canvas.zoomOut(2);
 				updateForZoom();
 			}
 		});
 		toolBar.add(btnZoomOut);
 		
 		JButton btnTestLevel = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/application_go.png")));
+		btnTestLevel.setHorizontalAlignment(SwingConstants.LEFT);
 		btnTestLevel.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnTestLevel.toolTip"));
 		btnTestLevel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -437,6 +427,11 @@ public class LevelEditorMain {
 				}
 			}
 		});
+		
+		JSeparator separator_3 = new JSeparator();
+		separator_3.setMaximumSize(new Dimension(10, 16));
+		separator_3.setOrientation(SwingConstants.VERTICAL);
+		toolBar.add(separator_3);
 		toolBar.add(btnTestLevel);
 		
 		JPanel statusPanel = new JPanel();
@@ -461,6 +456,7 @@ public class LevelEditorMain {
 					// left click means add a point
 					if(evt.getButton() == MouseEvent.BUTTON1) {
 						
+						float zoomFactor = canvas.getZoomFactor();
 						WorldPoint point = new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor));
 						unsavedChanges = true;
 						
@@ -530,16 +526,16 @@ public class LevelEditorMain {
 			@Override
 			public void mouseMoved(MouseEvent evt) {
 				
+				float zoomFactor = canvas.getZoomFactor();
 				if(!inDrawingMode) {
 					
-					/* TODO
 					if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
 						
 						canvas.setCursor(Cursor.HAND_CURSOR);
 					} else {
 						
 						canvas.setCursor(Cursor.DEFAULT_CURSOR);
-					}*/
+					}
 				}
 				
 				lblRightStatuslabel.setText(String.format("(%.2f, %.2f)", (evt.getPoint().x / zoomFactor), (-evt.getPoint().y / zoomFactor)));
@@ -547,7 +543,7 @@ public class LevelEditorMain {
 		});
 		
 		canvas.setCanvasDimension(new Dimension(editorSettings.canvasWidth, editorSettings.canvasHeight));
-		canvas.setZoomFactor(zoomFactor);
+		canvas.setZoomFactor(10.0f);
 		
 		scrollPane = new JScrollPane(canvas);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
@@ -560,6 +556,7 @@ public class LevelEditorMain {
 				
 				// move the biped reference
 				Point point = scrollPane.getViewport().getViewPosition();
+				float zoomFactor = canvas.getZoomFactor();
 				canvas.updateForViewportChange(new Point(Math.round(point.x / zoomFactor), Math.round(point.y / zoomFactor)));
 				canvas.repaint();
 			}
@@ -572,6 +569,7 @@ public class LevelEditorMain {
 				
 				// move the biped reference
 				Point point = scrollPane.getViewport().getViewPosition();
+				float zoomFactor = canvas.getZoomFactor();
 				canvas.updateForViewportChange(new Point(Math.round(point.x / zoomFactor), Math.round(point.y / zoomFactor)));
 				canvas.repaint();
 			}
@@ -649,7 +647,6 @@ public class LevelEditorMain {
 	
 	private void updateForZoom() {
 
-		canvas.setZoomFactor(zoomFactor);
 		canvas.repaint();
 		
 		// tell the scroll pane to update its scroll bars...
@@ -661,6 +658,7 @@ public class LevelEditorMain {
 			scrollPane.getViewport().setViewPosition(viewportCentre);
 			
 			// move the biped reference
+			float zoomFactor = canvas.getZoomFactor();
 			canvas.updateForViewportChange(new Point(Math.round(viewportCentre.x / zoomFactor), Math.round(viewportCentre.y / zoomFactor)));
 		}
 	}
@@ -858,6 +856,79 @@ public class LevelEditorMain {
 		} else {
 			
 			lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.addFirstPoint"));
+		}
+	}
+	
+	private void newLevel() {
+		
+		if(!checkSavedChanges()) {
+			
+			return;
+		}
+		
+		resetLevel();
+	}
+	
+	private void openLevel() {
+		
+		if(!checkSavedChanges()) {
+			
+			return;
+		}
+		
+		JFileChooser fc = new JFileChooser(new File(defaultLevelDir));
+		FileNameExtensionFilter filter = new FileNameExtensionFilter(
+				ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.levelFiles.fileType.text"), 
+				"json");
+		fc.setFileFilter(filter);
+		int returnVal = fc.showOpenDialog(frmSquadcarGamesLevel);
+		if(returnVal == JFileChooser.APPROVE_OPTION) {
+
+			File levelFile = fc.getSelectedFile();
+			try {
+				
+				if(!canvas.loadLevelFromFile(levelFile)) {
+					
+					JOptionPane.showMessageDialog(frmSquadcarGamesLevel,
+							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.text"), 
+							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.title"), 
+							JOptionPane.ERROR_MESSAGE);
+				}
+			} catch (HeadlessException ex) {
+
+				ex.printStackTrace();
+			} catch (IOException ex) {
+
+				ex.printStackTrace();
+			}
+			
+			currFilename = levelFile.getAbsolutePath();
+			
+			unsavedChanges = false;
+			
+			canvas.repaint();
+		}
+	}
+	
+	private void saveLevel() {
+		
+		if(currFilename == null) {
+
+			if(chooseLevelFilename(defaultLevelDir)) {
+				
+				saveLevel(currFilename);
+				return;
+			}
+		}
+		
+		saveLevel(currFilename);
+	}
+	
+	private void saveLevelAs() {
+		
+		if(chooseLevelFilename(defaultLevelDir)) {
+			
+			saveLevel(currFilename);
 		}
 	}
 }
