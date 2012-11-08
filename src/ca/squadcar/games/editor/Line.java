@@ -3,6 +3,8 @@ package ca.squadcar.games.editor;
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
 
+import javax.swing.JPanel;
+
 public class Line implements IDrawableElement {
 	
 	public WorldPoint start;
@@ -72,7 +74,12 @@ public class Line implements IDrawableElement {
 		}
 		
 		// TODO if its in the bounding box, perhaps test how far from the line it is?
-		
 		return boundingBox.contains(x, y);
+	}
+
+	@Override
+	public JPanel getPropertiesPanel() {
+		
+		return new LinePanel(this);
 	}
 }

@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 
+import javax.swing.JPanel;
+
 public class BipedReference implements IDrawableElement {
 
 	private float height;
@@ -61,5 +63,12 @@ public class BipedReference implements IDrawableElement {
 		
 		// no-op, doesn't matter
 		return false;
+	}
+
+	@Override
+	public JPanel getPropertiesPanel() {
+		
+		// no-op, doesn't apply
+		return null;
 	}
 }

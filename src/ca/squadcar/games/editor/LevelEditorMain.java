@@ -53,6 +53,7 @@ import com.google.gson.GsonBuilder;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import javax.swing.BoxLayout;
 
 public class LevelEditorMain {
 	
@@ -73,6 +74,9 @@ public class LevelEditorMain {
 	private JScrollPane scrollPane;
 	private JButton btnZoomIn;
 	private JButton btnZoomOut;
+	private JPanel propertiesPanel;
+	private JPanel currElemPropsPanel;
+	private JPanel dummyPropsPanel;
 	
 	private LevelCanvas canvas;
 	private boolean inDrawingMode;
@@ -513,11 +517,40 @@ public class LevelEditorMain {
 					
 					// in edit mode
 					// see if we hit an element that can be edited
-					//if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
+					float zoomFactor = canvas.getZoomFactor();
+					if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
 						
-						// TODO
-					//}
+						// show the options pane for this element
+						IDrawableElement hitElement = canvas.getLastHitElement();
+						if(hitElement != null) {
+							
+							if(currElemPropsPanel != null) {
+								
+								propertiesPanel.remove(currElemPropsPanel);
+							}
+							
+							currElemPropsPanel = hitElement.getPropertiesPanel();
+							if(currElemPropsPanel != null) {
+								
+								propertiesPanel.remove(dummyPropsPanel);
+								propertiesPanel.add(currElemPropsPanel);
+							} else {
+								
+								propertiesPanel.add(dummyPropsPanel);
+							}
+						}
+					} else {
+						
+						// clear out the properties and update all elements to not selected
+						if(currElemPropsPanel != null) {
+							
+							propertiesPanel.remove(currElemPropsPanel);
+							propertiesPanel.add(dummyPropsPanel);
+						}
+					}
 				}
+				
+				frmSquadcarGamesLevel.validate();
 				
 				canvas.repaint();
 			} 
@@ -643,6 +676,15 @@ public class LevelEditorMain {
 				}
 			}
 		});
+		
+		propertiesPanel = new JPanel();
+		frmSquadcarGamesLevel.getContentPane().add(propertiesPanel, BorderLayout.EAST);
+		propertiesPanel.setLayout(new BoxLayout(propertiesPanel, BoxLayout.Y_AXIS));
+		
+		dummyPropsPanel = new WorldPointPanel(new WorldPoint(0.0f, 0.0f), 
+				ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("WorldPointPanel.startPointTitle"));
+		dummyPropsPanel.setEnabled(false);
+		propertiesPanel.add(dummyPropsPanel);
 	}
 	
 	private void updateForZoom() {
@@ -814,7 +856,6 @@ public class LevelEditorMain {
 		canvas.setCursor(Cursor.DEFAULT_CURSOR);
 		canvas.setTempDrawableElement(null);
 		inDrawingMode = false;
-		lastPoint = null;
 		tglbtnSelect.setSelected(true);
 		tglbtnAddLine.setSelected(false);
 		tglbtnAddCurve.setSelected(false);

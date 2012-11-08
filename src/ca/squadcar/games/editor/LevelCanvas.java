@@ -24,6 +24,7 @@ public class LevelCanvas extends JPanel {
 	private IDrawableElement temp;
 	private Dimension canvasDim;
 	private BipedReference bipedRef;
+	private IDrawableElement lastHitElement;
 	
 	/**
 	 * Custom panel for drawing onto
@@ -37,6 +38,7 @@ public class LevelCanvas extends JPanel {
 		temp = null;
 		canvasDim = null;
 		bipedRef = new BipedReference();
+		lastHitElement = null;
 		
 		reset();
 	}
@@ -284,16 +286,24 @@ public class LevelCanvas extends JPanel {
 	}
 	
 	public boolean hitTest(final WorldPoint point) {
+
+		lastHitElement = null;
 		
 		// convert the mouse point to its world point
 		for(IDrawableElement element : elements) {
 			
 			if(element.hitTest(point.x, point.y)) {
 				
+				lastHitElement = element;
 				return true;
 			}
 		}
 		
 		return false;
+	}
+	
+	public IDrawableElement getLastHitElement() {
+		
+		return lastHitElement;
 	}
 }

@@ -4,6 +4,8 @@ import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
+import javax.swing.JPanel;
+
 public class QuadraticBezierCurve implements IDrawableElement {
 
 	public WorldPoint first;
@@ -217,5 +219,11 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		}
 
 		return false;
+	}
+
+	@Override
+	public JPanel getPropertiesPanel() {
+		
+		return new CurvePanel(this);
 	}
 }

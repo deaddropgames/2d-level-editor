@@ -1,6 +1,9 @@
 package ca.squadcar.games.editor;
 
 import java.awt.Graphics;
+import java.util.ResourceBundle;
+
+import javax.swing.JPanel;
 
 public class WorldPoint implements IDrawableElement {
 	
@@ -38,11 +41,19 @@ public class WorldPoint implements IDrawableElement {
 	public boolean hitTest(float x, float y) {
 		
 		// simpler to test if it doesn't contain the point, rather than if it does
+		// TODO: point size isn't in world space...needs to be converted first!!!!
 		/*if(Math.abs(x - this.x) > Globals.POINT_SIZE || Math.abs(y - this.y) > Globals.POINT_SIZE) {
 			
 			return false;
 		}*/
-		
+
 		return false;
+	}
+
+	@Override
+	public JPanel getPropertiesPanel() {
+		
+		return new WorldPointPanel(this, 
+				ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("WorldPointPanel.title"));
 	}
 }
