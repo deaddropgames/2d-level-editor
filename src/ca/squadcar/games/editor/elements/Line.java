@@ -1,7 +1,10 @@
-package ca.squadcar.games.editor;
+package ca.squadcar.games.editor.elements;
 
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
+
+import ca.squadcar.games.editor.gui.LinePanel;
+import ca.squadcar.games.editor.gui.PropertiesPanel;
 
 public class Line implements IDrawableElement {
 	

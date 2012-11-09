@@ -1,5 +1,10 @@
 package ca.squadcar.games.editor;
 
+import ca.squadcar.games.editor.elements.IDrawableElement;
+import ca.squadcar.games.editor.elements.Line;
+import ca.squadcar.games.editor.elements.QuadraticBezierCurve;
+import ca.squadcar.games.editor.elements.WorldPoint;
+
 public class JsonElement {
 
 	public static final short TypeNone = 0;

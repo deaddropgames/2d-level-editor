@@ -1,8 +1,11 @@
-package ca.squadcar.games.editor;
+package ca.squadcar.games.editor.elements;
 
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+
+import ca.squadcar.games.editor.gui.CurvePanel;
+import ca.squadcar.games.editor.gui.PropertiesPanel;
 
 public class QuadraticBezierCurve implements IDrawableElement {
 

@@ -48,8 +48,14 @@ import java.io.IOException;
 
 import javax.swing.JButton;
 
+import ca.squadcar.games.editor.elements.IDrawableElement;
+import ca.squadcar.games.editor.elements.Line;
+import ca.squadcar.games.editor.elements.QuadraticBezierCurve;
+import ca.squadcar.games.editor.elements.WorldPoint;
 import ca.squadcar.games.editor.events.ElementChangedEvent;
 import ca.squadcar.games.editor.events.IElementChangedListener;
+import ca.squadcar.games.editor.gui.LevelCanvas;
+import ca.squadcar.games.editor.gui.PropertiesPanel;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -320,7 +326,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		btnOpen.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnOpen.toolTip"));
 		toolBar.add(btnOpen);
 		
-		JButton btnSave = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/page_save.png")));
+		JButton btnSave = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/disk.png")));
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
@@ -330,7 +336,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		btnSave.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnSave.toolTip"));
 		toolBar.add(btnSave);
 		
-		JButton btnSaveAs = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/disk.png")));
+		JButton btnSaveAs = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/page_save.png")));
 		btnSaveAs.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
@@ -339,6 +345,21 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		});
 		btnSaveAs.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnSaveAs.toolTip"));
 		toolBar.add(btnSaveAs);
+		
+		JButton btnExport = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/page_lightning.png")));
+		btnExport.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+				
+				if(chooseLevelFilename(defaultExportDir)) {
+					
+					exportLevel(currFilename);
+					return;
+				}
+			}
+		});
+		btnExport.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnExport.toolTip"));
+		toolBar.add(btnExport);
 		
 		JSeparator separator_4 = new JSeparator();
 		separator_4.setOrientation(SwingConstants.VERTICAL);

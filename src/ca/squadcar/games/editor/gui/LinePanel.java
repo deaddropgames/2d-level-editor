@@ -1,7 +1,8 @@
-package ca.squadcar.games.editor;
+package ca.squadcar.games.editor.gui;
 
 import javax.swing.border.TitledBorder;
 
+import ca.squadcar.games.editor.elements.Line;
 import ca.squadcar.games.editor.events.ElementChangedEvent;
 import ca.squadcar.games.editor.events.IElementChangedListener;
 

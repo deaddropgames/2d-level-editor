@@ -1,9 +1,10 @@
-package ca.squadcar.games.editor;
+package ca.squadcar.games.editor.gui;
 
 import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
+import ca.squadcar.games.editor.elements.IDrawableElement;
 import ca.squadcar.games.editor.events.ElementChangedEvent;
 import ca.squadcar.games.editor.events.IElementChangedListener;
 

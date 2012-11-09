@@ -1,8 +1,10 @@
-package ca.squadcar.games.editor;
+package ca.squadcar.games.editor.elements;
 
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
+
+import ca.squadcar.games.editor.gui.PropertiesPanel;
 
 public class BipedReference implements IDrawableElement {
 

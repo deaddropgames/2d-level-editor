@@ -1,8 +1,12 @@
-package ca.squadcar.games.editor;
+package ca.squadcar.games.editor.elements;
 
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
 import java.util.ResourceBundle;
+
+import ca.squadcar.games.editor.Globals;
+import ca.squadcar.games.editor.gui.PropertiesPanel;
+import ca.squadcar.games.editor.gui.WorldPointPanel;
 
 public class WorldPoint implements IDrawableElement {
 	

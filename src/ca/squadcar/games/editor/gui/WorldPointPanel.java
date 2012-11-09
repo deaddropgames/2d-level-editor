@@ -1,4 +1,4 @@
-package ca.squadcar.games.editor;
+package ca.squadcar.games.editor.gui;
 
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.TitledBorder;
@@ -9,6 +9,9 @@ import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
 import javax.swing.JSpinner;
+
+import ca.squadcar.games.editor.Globals;
+import ca.squadcar.games.editor.elements.WorldPoint;
 
 import java.awt.Insets;
 

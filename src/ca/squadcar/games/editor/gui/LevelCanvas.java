@@ -1,8 +1,16 @@
-package ca.squadcar.games.editor;
+package ca.squadcar.games.editor.gui;
 
 import java.awt.Graphics;
 
 import javax.swing.JPanel;
+
+import ca.squadcar.games.editor.JsonElement;
+import ca.squadcar.games.editor.JsonLevel;
+import ca.squadcar.games.editor.elements.BipedReference;
+import ca.squadcar.games.editor.elements.IDrawableElement;
+import ca.squadcar.games.editor.elements.Line;
+import ca.squadcar.games.editor.elements.QuadraticBezierCurve;
+import ca.squadcar.games.editor.elements.WorldPoint;
 
 import com.google.gson.Gson;
 

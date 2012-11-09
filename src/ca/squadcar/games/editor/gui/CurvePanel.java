@@ -1,4 +1,4 @@
-package ca.squadcar.games.editor;
+package ca.squadcar.games.editor.gui;
 
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
@@ -10,6 +10,7 @@ import javax.swing.JLabel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
+import ca.squadcar.games.editor.elements.QuadraticBezierCurve;
 import ca.squadcar.games.editor.events.ElementChangedEvent;
 import ca.squadcar.games.editor.events.IElementChangedListener;
 
