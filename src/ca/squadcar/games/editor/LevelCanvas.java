@@ -117,18 +117,18 @@ public class LevelCanvas extends JPanel {
 		return (elements.size() > 0);
 	}
 	
-	public ca.squadcar.games.export.Level getLevelForExport() {
+	public ca.squadcar.games.editor.export.Level getLevelForExport() {
 		
 		if(elements.size() == 0) {
 			
 			return null;
 		}
 	
-		ca.squadcar.games.export.Level level = new ca.squadcar.games.export.Level();
+		ca.squadcar.games.editor.export.Level level = new ca.squadcar.games.editor.export.Level();
 		
 		// assume a single polyline for now...
-		level.polyLines = new ca.squadcar.games.export.PolyLine[1];
-		level.polyLines[0] = new ca.squadcar.games.export.PolyLine();
+		level.polyLines = new ca.squadcar.games.editor.export.PolyLine[1];
+		level.polyLines[0] = new ca.squadcar.games.editor.export.PolyLine();
 		
 		// we need to translate all points relative to the first
 		WorldPoint transPoint;

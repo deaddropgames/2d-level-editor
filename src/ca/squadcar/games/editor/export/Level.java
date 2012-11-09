@@ -1,4 +1,4 @@
-package ca.squadcar.games.export;
+package ca.squadcar.games.editor.export;
 
 public class Level {
 

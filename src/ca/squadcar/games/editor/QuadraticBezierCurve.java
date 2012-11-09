@@ -4,8 +4,6 @@ import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
-import javax.swing.JPanel;
-
 public class QuadraticBezierCurve implements IDrawableElement {
 
 	public WorldPoint first;
@@ -13,7 +11,7 @@ public class QuadraticBezierCurve implements IDrawableElement {
 	public WorldPoint third;
 	public int numSegments;
 	private ArrayList<Line> lines;
-	private Rectangle2D.Float boundingBox;
+	private transient Rectangle2D.Float boundingBox;
 	
 	public QuadraticBezierCurve(final WorldPoint firstPoint, final int numSegments) {
 		
@@ -28,22 +26,10 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		this.second = new WorldPoint(curve.second);
 		this.third = new WorldPoint(curve.third);
 		this.numSegments = curve.numSegments;
-		this.lines = new ArrayList<Line>(curve.lines);
+		this.lines = new ArrayList<Line>();
 		
-		initBoundingBox();
-	}
-	
-	private void initBoundingBox() {
-		
-		float minX = Math.min(Math.min(first.x, second.x), third.x);
-		float minY = Math.min(Math.min(first.y, second.y), third.y);
-		float maxX = Math.max(Math.max(first.x, second.x), third.x);
-		float maxY = Math.max(Math.max(first.y, second.y), third.y);
-		
-		this.boundingBox = new Rectangle2D.Float(minX, 
-				minY, 
-				Math.abs(maxX - minX), 
-				Math.abs(maxY - minY));
+		// re-create the lines and bounding box...
+		init();
 	}
 	
 	public void addPoint(final WorldPoint point) {
@@ -57,38 +43,11 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		} else if(third == null) {
 			
 			third = new WorldPoint(point);
-			initBoundingBox();
 		} else {
 			
 			System.err.println("Oops, tried to add a point to a completed curve.");
 			return;
 		}
-		
-		init();
-	}
-	
-	public void setFirstPoint(final WorldPoint point) {
-		
-		first = new WorldPoint(point);
-		
-		// re-create bounding box
-		initBoundingBox();
-		
-		init();
-	}
-	
-	public void setSecondPoint(final WorldPoint point) {
-		
-		second = new WorldPoint(point);
-		init();
-	}
-	
-	public void setThirdPoint(final WorldPoint point) {
-		
-		third = new WorldPoint(point);
-		
-		// re-create bounding box
-		initBoundingBox();
 		
 		init();
 	}
@@ -121,7 +80,7 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		return numPoints;
 	}
 	
-	private void init() {
+	public void init() {
 		
 		if(pointsCount() != 3 || numSegments <= 0) {
 			
@@ -161,6 +120,17 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		
 		// add the final line segment ending at the third point
 		lines.add(new Line(point2, third));
+		
+		// initialize the bounding box
+		float minX = Math.min(Math.min(first.x, second.x), third.x);
+		float minY = Math.min(Math.min(first.y, second.y), third.y);
+		float maxX = Math.max(Math.max(first.x, second.x), third.x);
+		float maxY = Math.max(Math.max(first.y, second.y), third.y);
+		
+		this.boundingBox = new Rectangle2D.Float(minX, 
+				minY, 
+				Math.abs(maxX - minX), 
+				Math.abs(maxY - minY));
 	}
 	
 	public ArrayList<Line> getLines() {
@@ -222,7 +192,7 @@ public class QuadraticBezierCurve implements IDrawableElement {
 	}
 
 	@Override
-	public JPanel getPropertiesPanel() {
+	public PropertiesPanel getPropertiesPanel() {
 		
 		return new CurvePanel(this);
 	}

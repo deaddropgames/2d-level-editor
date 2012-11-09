@@ -36,9 +36,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseAdapter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -48,6 +48,9 @@ import java.io.IOException;
 
 import javax.swing.JButton;
 
+import ca.squadcar.games.editor.events.ElementChangedEvent;
+import ca.squadcar.games.editor.events.IElementChangedListener;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -55,7 +58,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.BoxLayout;
 
-public class LevelEditorMain {
+public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	
 	final private String[] reservedFilenames = {"biped.json", "draw.json", "level.json", "ski.json", "conf.json"};
 	final private String defaultLevelDir = "levels/";
@@ -75,8 +78,7 @@ public class LevelEditorMain {
 	private JButton btnZoomIn;
 	private JButton btnZoomOut;
 	private JPanel propertiesPanel;
-	private JPanel currElemPropsPanel;
-	private JPanel dummyPropsPanel;
+	private PropertiesPanel currElemPropsPanel;
 	
 	private LevelCanvas canvas;
 	private boolean inDrawingMode;
@@ -108,7 +110,7 @@ public class LevelEditorMain {
 	/**
 	 * Create the application.
 	 */
-	public LevelEditorMain() throws IOException {
+	public LevelEditorMain() {
 		
 		inDrawingMode = false;
 		
@@ -136,7 +138,13 @@ public class LevelEditorMain {
 			
 			if(br != null) {
 				
-				br.close();
+				try {
+					
+					br.close();
+				} catch (IOException ex) {
+					
+					ex.printStackTrace();
+				}
 			}
 		}
 		
@@ -411,7 +419,6 @@ public class LevelEditorMain {
 				}
 				
 				// save the current level to test.json
-				// TODO: eventually we may want to handle more arguments...for now we ignore the ${level} param and just use test.json
 				File testFile = new File(defaultTestLevelFilename);
 				exportLevel(defaultTestLevelFilename);
 				
@@ -451,110 +458,7 @@ public class LevelEditorMain {
 		statusPanel.add(lblRightStatuslabel);
 		
 		canvas = new LevelCanvas();
-		canvas.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent evt) {
-				
-				if(inDrawingMode) {
-				
-					// left click means add a point
-					if(evt.getButton() == MouseEvent.BUTTON1) {
-						
-						float zoomFactor = canvas.getZoomFactor();
-						WorldPoint point = new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor));
-						unsavedChanges = true;
-						
-						// if there isn't a start point yet, add that first
-						if(lastPoint == null) {
-							
-							canvas.addDrawableElement(point);
-							if(tglbtnAddLine.isSelected()) {
-								
-								lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.lineMode"));
-							} else if(tglbtnAddCurve.isSelected()) {
-								
-								currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
-								canvas.setTempDrawableElement(currCurve);
-								lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
-							}
-						} else {
-							
-							if(tglbtnAddLine.isSelected()) {
-								
-								// assume the last point is the line start
-								canvas.addDrawableElement(new Line(lastPoint, point));
-							} else if(tglbtnAddCurve.isSelected()) {
-								
-								if(currCurve == null) {
-									
-									currCurve = new QuadraticBezierCurve(lastPoint, editorSettings.numCurveSegments);
-									currCurve.addPoint(point);
-									canvas.setTempDrawableElement(currCurve);
-									lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
-								} else {
-									
-									currCurve.addPoint(point);
-									if(currCurve.pointsCount() == 3) {
-										
-										canvas.addDrawableElement(new QuadraticBezierCurve(currCurve));
-										currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
-										canvas.setTempDrawableElement(currCurve);
-										lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
-									} else {
-									
-										lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
-									}
-								}
-							}
-						}
-						
-						// save for later...
-						lastPoint = new WorldPoint(point);
-						
-						unsavedChanges = true;
-					}
-				} else {
-					
-					// in edit mode
-					// see if we hit an element that can be edited
-					float zoomFactor = canvas.getZoomFactor();
-					if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
-						
-						// show the options pane for this element
-						IDrawableElement hitElement = canvas.getLastHitElement();
-						if(hitElement != null) {
-							
-							if(currElemPropsPanel != null) {
-								
-								propertiesPanel.remove(currElemPropsPanel);
-							}
-							
-							currElemPropsPanel = hitElement.getPropertiesPanel();
-							if(currElemPropsPanel != null) {
-								
-								propertiesPanel.remove(dummyPropsPanel);
-								propertiesPanel.add(currElemPropsPanel);
-							} else {
-								
-								propertiesPanel.add(dummyPropsPanel);
-							}
-						}
-					} else {
-						
-						// clear out the properties and update all elements to not selected
-						if(currElemPropsPanel != null) {
-							
-							propertiesPanel.remove(currElemPropsPanel);
-							propertiesPanel.add(dummyPropsPanel);
-						}
-					}
-				}
-				
-				frmSquadcarGamesLevel.validate();
-				
-				canvas.repaint();
-			} 
-		});
+		canvas.addMouseListener(this);
 		canvas.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseMoved(MouseEvent evt) {
@@ -680,11 +584,6 @@ public class LevelEditorMain {
 		propertiesPanel = new JPanel();
 		frmSquadcarGamesLevel.getContentPane().add(propertiesPanel, BorderLayout.EAST);
 		propertiesPanel.setLayout(new BoxLayout(propertiesPanel, BoxLayout.Y_AXIS));
-		
-		dummyPropsPanel = new WorldPointPanel(new WorldPoint(0.0f, 0.0f), 
-				ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("WorldPointPanel.startPointTitle"));
-		dummyPropsPanel.setEnabled(false);
-		propertiesPanel.add(dummyPropsPanel);
 	}
 	
 	private void updateForZoom() {
@@ -802,7 +701,7 @@ public class LevelEditorMain {
 		}
 		
 		// NOTE: the export level class is different from those that can be saved
-		ca.squadcar.games.export.Level level = canvas.getLevelForExport();
+		ca.squadcar.games.editor.export.Level level = canvas.getLevelForExport();
 		if(level == null) {
 			
 			System.err.println("Level cannot be exported with no elements.");
@@ -872,6 +771,12 @@ public class LevelEditorMain {
 		tglbtnSelect.setSelected(false);
 		tglbtnAddCurve.setSelected(false);
 		
+		if(currElemPropsPanel != null) {
+			
+			propertiesPanel.remove(currElemPropsPanel);
+			frmSquadcarGamesLevel.validate();
+		}
+		
 		if(lastPoint != null) {
 		
 			lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.lineMode"));
@@ -890,6 +795,12 @@ public class LevelEditorMain {
 		tglbtnAddCurve.setSelected(true);
 		tglbtnSelect.setSelected(false);
 		tglbtnAddLine.setSelected(false);
+		
+		if(currElemPropsPanel != null) {
+			
+			propertiesPanel.remove(currElemPropsPanel);
+			frmSquadcarGamesLevel.validate();
+		}
 		
 		if(lastPoint != null) {
 			
@@ -971,5 +882,127 @@ public class LevelEditorMain {
 			
 			saveLevel(currFilename);
 		}
+	}
+
+	@Override
+	public void elementChanged(ElementChangedEvent event) {
+
+		// if the element that changed has neighbors, we will need to update them as well
+		
+		canvas.repaint();
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent evt) {
+		
+		if(inDrawingMode) {
+			
+			// left click means add a point
+			if(evt.getButton() == MouseEvent.BUTTON1) {
+				
+				float zoomFactor = canvas.getZoomFactor();
+				WorldPoint point = new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor));
+				unsavedChanges = true;
+				
+				// if there isn't a start point yet, add that first
+				if(lastPoint == null) {
+					
+					canvas.addDrawableElement(point);
+					if(tglbtnAddLine.isSelected()) {
+						
+						lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.lineMode"));
+					} else if(tglbtnAddCurve.isSelected()) {
+						
+						currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
+						canvas.setTempDrawableElement(currCurve);
+						lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
+					}
+				} else {
+					
+					if(tglbtnAddLine.isSelected()) {
+						
+						// assume the last point is the line start
+						canvas.addDrawableElement(new Line(lastPoint, point));
+					} else if(tglbtnAddCurve.isSelected()) {
+						
+						if(currCurve == null) {
+							
+							currCurve = new QuadraticBezierCurve(lastPoint, editorSettings.numCurveSegments);
+							currCurve.addPoint(point);
+							canvas.setTempDrawableElement(currCurve);
+							lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
+						} else {
+							
+							currCurve.addPoint(point);
+							if(currCurve.pointsCount() == 3) {
+								
+								canvas.addDrawableElement(new QuadraticBezierCurve(currCurve));
+								currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
+								canvas.setTempDrawableElement(currCurve);
+								lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
+							} else {
+							
+								lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
+							}
+						}
+					}
+				}
+				
+				// save for later...
+				lastPoint = new WorldPoint(point);
+				
+				unsavedChanges = true;
+			}
+		} else {
+			
+			// in edit mode
+			// clear out the properties and update all elements to not selected
+			if(currElemPropsPanel != null) {
+				
+				currElemPropsPanel.removeElemChangedListener(this);
+				propertiesPanel.remove(currElemPropsPanel);
+			}
+			
+			// see if we hit an element that can be edited
+			float zoomFactor = canvas.getZoomFactor();
+			if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
+				
+				// show the options pane for this element
+				IDrawableElement hitElement = canvas.getLastHitElement();
+				if(hitElement != null) {
+					
+					currElemPropsPanel = hitElement.getPropertiesPanel();
+					if(currElemPropsPanel != null) {
+						
+						propertiesPanel.add(currElemPropsPanel);
+						currElemPropsPanel.addElemChangedListener(this);
+					}
+				}
+			}
+		}
+		
+		frmSquadcarGamesLevel.validate();
+		
+		canvas.repaint();
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+
 	}
 }

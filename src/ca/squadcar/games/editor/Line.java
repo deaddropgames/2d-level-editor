@@ -3,14 +3,12 @@ package ca.squadcar.games.editor;
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
 
-import javax.swing.JPanel;
-
 public class Line implements IDrawableElement {
 	
 	public WorldPoint start;
 	public WorldPoint end;
 	
-	private Rectangle2D.Float boundingBox;
+	private transient Rectangle2D.Float boundingBox;
 	
 	public Line(final WorldPoint start, final WorldPoint end) {
 		
@@ -35,8 +33,9 @@ public class Line implements IDrawableElement {
 		initBoundingBox();
 	}
 	
-	private void initBoundingBox() {
+	public void initBoundingBox() {
 		
+		// TODO: when a line is vertical or horizontal, we should expand the bounding box a bit
 		this.boundingBox = new Rectangle2D.Float(Math.min(start.x, end.x), 
 				Math.min(start.y, end.y), 
 				Math.abs(start.x - end.x), 
@@ -78,7 +77,7 @@ public class Line implements IDrawableElement {
 	}
 
 	@Override
-	public JPanel getPropertiesPanel() {
+	public PropertiesPanel getPropertiesPanel() {
 		
 		return new LinePanel(this);
 	}

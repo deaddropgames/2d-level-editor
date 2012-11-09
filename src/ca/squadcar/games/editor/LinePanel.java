@@ -1,31 +1,60 @@
 package ca.squadcar.games.editor;
 
-import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
+
+import ca.squadcar.games.editor.events.ElementChangedEvent;
+import ca.squadcar.games.editor.events.IElementChangedListener;
+
 import java.util.ResourceBundle;
 
-import java.awt.GridLayout;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
 
 @SuppressWarnings("serial")
-public class LinePanel extends JPanel {
-
-	private Line line;
+public class LinePanel extends PropertiesPanel implements IElementChangedListener {
 	
 	/**
 	 * Create the panel.
 	 */
-	public LinePanel(Line line) {
+	public LinePanel(final Line line) {
 		
-		this.line = line;
+		super(line);
+		
 		setBorder(new TitledBorder(null, ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LinePanel.title"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		setLayout(new GridLayout(2, 1, 0, 0));
+		GridBagLayout gridBagLayout = new GridBagLayout();
+		gridBagLayout.columnWidths = new int[]{0, 0};
+		gridBagLayout.rowHeights = new int[]{0, 0, 0};
+		gridBagLayout.columnWeights = new double[]{0.0, Double.MIN_VALUE};
+		gridBagLayout.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		setLayout(gridBagLayout);
 		
-		WorldPointPanel startPoint = new WorldPointPanel(line.start,
+		WorldPointPanel startPointPanel = new WorldPointPanel(line.start,
 				ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LinePanel.startTitle"));
-		add(startPoint);
+		startPointPanel.addElemChangedListener(this);
+		GridBagConstraints gbc_startPoint = new GridBagConstraints();
+		gbc_startPoint.fill = GridBagConstraints.BOTH;
+		gbc_startPoint.insets = new Insets(0, 0, 5, 0);
+		gbc_startPoint.gridx = 0;
+		gbc_startPoint.gridy = 0;
+		add(startPointPanel, gbc_startPoint);
 		
-		WorldPointPanel endPoint = new WorldPointPanel(line.end,
+		WorldPointPanel endPointPanel = new WorldPointPanel(line.end,
 				ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LinePanel.endTitle"));
-		add(endPoint);
+		endPointPanel.addElemChangedListener(this);
+		GridBagConstraints gbc_endPoint = new GridBagConstraints();
+		gbc_endPoint.fill = GridBagConstraints.BOTH;
+		gbc_endPoint.gridx = 0;
+		gbc_endPoint.gridy = 1;
+		add(endPointPanel, gbc_endPoint);
+	}
+
+	@Override
+	public void elementChanged(ElementChangedEvent event) {
+		
+		// both points should be updated automatically...just re-init the bounding box
+		((Line)element).initBoundingBox();
+		
+		fireElemChangedEvent();
 	}
 }
