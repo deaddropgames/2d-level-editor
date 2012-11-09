@@ -606,6 +606,9 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	
 	private boolean chooseLevelFilename(final String defaultDir) {
 		
+		// TODO: need dialog to get level metadata like title and description, etc...
+		//       this dialog can have a file picker element on it
+		
 		// make sure there is something to save...
 		if(!canvas.hasElements()) {
 			
@@ -674,6 +677,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			return;
 		}
 		
+		// TODO: need to also save the level metadata
+		
 		Gson json = new GsonBuilder().setPrettyPrinting().create();
 		try {
 
@@ -729,6 +734,13 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		canvas.repaint();
 		currFilename = null;
 		unsavedChanges = false;
+		
+		if(currElemPropsPanel != null) {
+			
+			propertiesPanel.remove(currElemPropsPanel);
+			frmSquadcarGamesLevel.validate();
+		}
+		
 		scrollPane.getViewport().setViewPosition(new Point(0, 0));
 	}
 	
@@ -828,6 +840,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			return;
 		}
 		
+		resetLevel();
+		
 		JFileChooser fc = new JFileChooser(new File(defaultLevelDir));
 		FileNameExtensionFilter filter = new FileNameExtensionFilter(
 				ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.levelFiles.fileType.text"), 
@@ -888,8 +902,17 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	public void elementChanged(ElementChangedEvent event) {
 
 		// if the element that changed has neighbors, we will need to update them as well
+		WorldPoint point = canvas.updateNeighbors(((PropertiesPanel)event.getSource()).getElement());
+		
+		// the above function will return a point if the last element was modified...in this case we need to update our lastPoint
+		if(point != null) {
+			
+			lastPoint = new WorldPoint(point);
+		}
 		
 		canvas.repaint();
+		
+		unsavedChanges = true;
 	}
 
 	@Override

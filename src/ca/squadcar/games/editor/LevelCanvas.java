@@ -306,4 +306,112 @@ public class LevelCanvas extends JPanel {
 		
 		return lastHitElement;
 	}
+	
+	public WorldPoint updateNeighbors(final IDrawableElement element) {
+		
+		// if we are modifying the last element, then we need to tell the main frame to update its last point variable...
+		WorldPoint lastPoint = null;
+		
+		int index = elements.indexOf(element);
+		if(index == -1) {
+			
+			return lastPoint;
+		}
+		
+		int prev = index - 1;
+		int next = index + 1;
+		
+		// update the previous neighbor...
+		if(prev >= 0) {
+			
+			// get the point that we need to update
+			WorldPoint point = null;
+			if(element instanceof WorldPoint) {
+				
+				point = (WorldPoint)element;
+			} else if(element instanceof Line) {
+				
+				point = ((Line)element).start;
+			} else if(element instanceof QuadraticBezierCurve) {
+				
+				point = ((QuadraticBezierCurve)element).first;
+			}
+			
+			// update the appropriate point on the neighbor
+			IDrawableElement prevElement = elements.get(prev);
+			if(point != null) {
+				
+				if(prevElement instanceof WorldPoint) {
+					
+					((WorldPoint)prevElement).x = point.x;
+					((WorldPoint)prevElement).y = point.y;
+				} else if(prevElement instanceof Line) {
+					
+					((Line)prevElement).end.x = point.x;
+					((Line)prevElement).end.y = point.y;
+					((Line)prevElement).initBoundingBox();
+				} else if(prevElement instanceof QuadraticBezierCurve) {
+					
+					((QuadraticBezierCurve)prevElement).third.x = point.x;
+					((QuadraticBezierCurve)prevElement).third.y = point.y;
+					((QuadraticBezierCurve)prevElement).init();
+				}
+			}
+		}
+	
+		// update the next neighbor...
+		if(next < elements.size()) {
+			
+			// get the point that we need to update
+			WorldPoint point = null;
+			if(element instanceof WorldPoint) {
+				
+				point = (WorldPoint)element;
+			} else if(element instanceof Line) {
+				
+				point = ((Line)element).end;
+			} else if(element instanceof QuadraticBezierCurve) {
+				
+				point = ((QuadraticBezierCurve)element).third;
+			}
+			
+			// update the appropriate point on the neighbor
+			IDrawableElement nextElement = elements.get(next);
+			if(point != null) {
+				
+				if(nextElement instanceof WorldPoint) {
+					
+					((WorldPoint)nextElement).x = point.x;
+					((WorldPoint)nextElement).y = point.y;
+				} else if(nextElement instanceof Line) {
+					
+					((Line)nextElement).start.x = point.x;
+					((Line)nextElement).start.y = point.y;
+					((Line)nextElement).initBoundingBox();
+				} else if(nextElement instanceof QuadraticBezierCurve) {
+					
+					((QuadraticBezierCurve)nextElement).first.x = point.x;
+					((QuadraticBezierCurve)nextElement).first.y = point.y;
+					((QuadraticBezierCurve)nextElement).init();
+				}
+			}
+		}
+		
+		// if we just modified the last element in the list, we need to tell the main frame...
+		if(next == elements.size()) {
+		
+			if(element instanceof WorldPoint) {
+				
+				lastPoint = (WorldPoint)element;
+			} else if(element instanceof Line) {
+				
+				lastPoint = ((Line)element).end;
+			} else if(element instanceof QuadraticBezierCurve) {
+				
+				lastPoint = ((QuadraticBezierCurve)element).third;
+			}
+		}
+		
+		return null;
+	}
 }

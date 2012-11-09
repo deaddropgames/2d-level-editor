@@ -95,16 +95,26 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		WorldPoint point2 = new WorldPoint(0.0f, 0.0f);
 		float nextTt = 0.0f;
 		
+		// equation for quadratic bezier curve: (1 - t)^2 * P0 + 2 * (1 - t)t * P1 + t^2 * P2
 		float increment = 1.0f / (float)numSegments;
-		for(float tt = 0; tt < 1.0f; tt += increment) {
+		for(int ii = 0; ii < numSegments; ii++) {
 			
-			// equation: (1 - t)^2 * P0 + 2 * (1 - t)t * P1 + t^2 * P2
-			temp1 = first.mul((float)Math.pow((1.0f - tt), 2));
-			temp2 = second.mul(2.0f * (1.0f - tt) * tt);
-			temp3 = third.mul(tt * tt);
+			float tt = ii * increment;
 			
-			point1.x = temp1.x + temp2.x + temp3.x;
-			point1.y = temp1.y + temp2.y + temp3.y;
+			// only need to calculate the first point on the first iteration
+			if(ii == 0) {
+				
+				temp1 = first.mul((float)Math.pow((1.0f - tt), 2));
+				temp2 = second.mul(2.0f * (1.0f - tt) * tt);
+				temp3 = third.mul(tt * tt);
+				
+				point1.x = temp1.x + temp2.x + temp3.x;
+				point1.y = temp1.y + temp2.y + temp3.y;
+			} else { // we can use the previous point
+				
+				point1.x = point2.x;
+				point1.y = point2.y;
+			}
 			
 			nextTt = tt + increment;
 			
@@ -117,9 +127,6 @@ public class QuadraticBezierCurve implements IDrawableElement {
 			
 			lines.add(new Line(point1, point2));
 		}
-		
-		// add the final line segment ending at the third point
-		lines.add(new Line(point2, third));
 		
 		// initialize the bounding box
 		float minX = Math.min(Math.min(first.x, second.x), third.x);

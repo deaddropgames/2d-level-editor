@@ -12,22 +12,7 @@ public class Line implements IDrawableElement {
 	
 	public Line(final WorldPoint start, final WorldPoint end) {
 		
-		this.start = new WorldPoint(start);
-		this.end = new WorldPoint(end);
-		
-		initBoundingBox();
-	}
-	
-	public Line(final Line line) {
-		
-		this.start = new WorldPoint(line.start);
-		this.end = new WorldPoint(line.end);
-		
-		initBoundingBox();
-	}
-	
-	public void setEnd(final WorldPoint end) {
-
+	    this.start = new WorldPoint(start);
 		this.end = new WorldPoint(end);
 		
 		initBoundingBox();

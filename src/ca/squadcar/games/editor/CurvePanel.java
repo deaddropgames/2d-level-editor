@@ -2,6 +2,9 @@ package ca.squadcar.games.editor;
 
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import java.util.ResourceBundle;
 import javax.swing.JLabel;
 import javax.swing.JSpinner;
@@ -15,7 +18,9 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 
 @SuppressWarnings("serial")
-public class CurvePanel extends PropertiesPanel implements IElementChangedListener {
+public class CurvePanel extends PropertiesPanel implements IElementChangedListener, ChangeListener {
+	
+	JSpinner spinner; // for the number of segments
 	
 	/**
 	 * Create the panel.
@@ -83,7 +88,8 @@ public class CurvePanel extends PropertiesPanel implements IElementChangedListen
 		gbc_lblNumberOfSegments.gridy = 0;
 		panel.add(lblNumberOfSegments, gbc_lblNumberOfSegments);
 		
-		JSpinner spinner = new JSpinner(new SpinnerNumberModel(curve.numSegments, 2, 1000, 1));
+		spinner = new JSpinner(new SpinnerNumberModel(curve.numSegments, 2, 1000, 1));
+		spinner.addChangeListener(this);
 		GridBagConstraints gbc_spinner = new GridBagConstraints();
 		gbc_spinner.fill = GridBagConstraints.BOTH;
 		gbc_spinner.gridx = 0;
@@ -94,6 +100,14 @@ public class CurvePanel extends PropertiesPanel implements IElementChangedListen
 	@Override
 	public void elementChanged(ElementChangedEvent event) {
 		
+		((QuadraticBezierCurve)element).init();
+		fireElemChangedEvent();
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent event) {
+		
+		((QuadraticBezierCurve)element).numSegments = (Integer)spinner.getValue();
 		((QuadraticBezierCurve)element).init();
 		fireElemChangedEvent();
 	}
