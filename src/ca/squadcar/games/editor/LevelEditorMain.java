@@ -726,6 +726,12 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			return;
 		}
 		
+		// save it in original format first...
+		if(currFilename != null) {
+			
+			saveLevel(currFilename);
+		}
+		
 		// NOTE: the export level class is different from those that can be saved
 		ca.squadcar.games.editor.export.Level level = canvas.getLevelForExport();
 		if(level == null) {
@@ -798,6 +804,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		
 		canvas.setCursor(Cursor.CROSSHAIR_CURSOR);
 		canvas.setTempDrawableElement(null);
+		canvas.selectNone();
 		currCurve = null;
 		inDrawingMode = true;
 		tglbtnAddLine.setSelected(true);
@@ -823,6 +830,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		
 		canvas.setCursor(Cursor.CROSSHAIR_CURSOR);
 		canvas.setTempDrawableElement(null);
+		canvas.selectNone();
 		currCurve = null;
 		inDrawingMode = true;
 		tglbtnAddCurve.setSelected(true);
@@ -888,6 +896,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 
 				ex.printStackTrace();
 			}
+			
+			lastPoint = canvas.getLastPoint();
 			
 			currFilename = levelFile.getAbsolutePath();
 			
@@ -1007,6 +1017,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				propertiesPanel.remove(currElemPropsPanel);
 			}
 			
+			canvas.selectNone();
+			
 			// see if we hit an element that can be edited
 			float zoomFactor = canvas.getZoomFactor();
 			if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
@@ -1015,6 +1027,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				IDrawableElement hitElement = canvas.getLastHitElement();
 				if(hitElement != null) {
 					
+					hitElement.setSelected(true);
 					currElemPropsPanel = hitElement.getPropertiesPanel();
 					if(currElemPropsPanel != null) {
 						

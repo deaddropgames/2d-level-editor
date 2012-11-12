@@ -1,8 +1,10 @@
 package ca.squadcar.games.editor.elements;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
 
+import ca.squadcar.games.editor.Globals;
 import ca.squadcar.games.editor.gui.LinePanel;
 import ca.squadcar.games.editor.gui.PropertiesPanel;
 
@@ -12,11 +14,14 @@ public class Line implements IDrawableElement {
 	public WorldPoint end;
 	
 	private transient Rectangle2D.Float boundingBox;
+	private transient boolean selected;
 	
 	public Line(final WorldPoint start, final WorldPoint end) {
 		
 	    this.start = new WorldPoint(start);
 		this.end = new WorldPoint(end);
+		
+		this.selected = false;
 		
 		initBoundingBox();
 	}
@@ -32,6 +37,12 @@ public class Line implements IDrawableElement {
 
 	@Override
 	public void draw(Graphics gfx, final float zoomFactor) {
+		
+		Color temp = gfx.getColor();
+		if(selected) {
+			
+			gfx.setColor(Globals.SELECTED_COLOR);
+		}
 		
 		gfx.drawLine(Math.round(start.x * zoomFactor), 
 				Math.round(start.y * zoomFactor), 
@@ -50,6 +61,8 @@ public class Line implements IDrawableElement {
 					Math.round(boundingBox.height * zoomFactor));
 		}
 		*/
+		
+		gfx.setColor(temp);
 	}
 
 	@Override
@@ -60,6 +73,12 @@ public class Line implements IDrawableElement {
 			return false;
 		}
 		
+		// if either point is hit...
+		if(start.hitTest(x, y) || end.hitTest(x, y)) {
+			
+			return true;
+		}
+		
 		// TODO if its in the bounding box, perhaps test how far from the line it is?
 		return boundingBox.contains(x, y);
 	}
@@ -68,5 +87,11 @@ public class Line implements IDrawableElement {
 	public PropertiesPanel getPropertiesPanel() {
 		
 		return new LinePanel(this);
+	}
+
+	@Override
+	public void setSelected(boolean selected) {
+
+		this.selected = selected;
 	}
 }

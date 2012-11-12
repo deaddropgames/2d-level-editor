@@ -1,5 +1,6 @@
 package ca.squadcar.games.editor.elements;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
 import java.util.ResourceBundle;
@@ -13,14 +14,16 @@ public class WorldPoint implements IDrawableElement {
 	public float x;
 	public float y;
 	
-	public transient float zoomFactor;
-	public transient Rectangle2D.Float boundingBox;
+	private transient float zoomFactor;
+	private transient Rectangle2D.Float boundingBox;
+	private transient boolean selected;
 	
 	public WorldPoint(final float x, final float y) {
 		
 		this.x = x;
 		this.y = y;
 		this.zoomFactor = 0.0f;
+		this.selected = false;
 	}
 	
 	public WorldPoint(final WorldPoint point) {
@@ -28,6 +31,7 @@ public class WorldPoint implements IDrawableElement {
 		this.x = point.x;
 		this.y = point.y;
 		this.zoomFactor = 0.0f;
+		this.selected = false;
 	}
 	
 	public WorldPoint mul(final float scalar) {
@@ -53,6 +57,12 @@ public class WorldPoint implements IDrawableElement {
 	@Override
 	public void draw(Graphics gfx, float zoomFactor) {
 		
+		Color temp = gfx.getColor();
+		if(selected) {
+			
+			gfx.setColor(Globals.SELECTED_COLOR);
+		}
+		
 		// if zoom factor has changed, update our bounding box
 		if(this.zoomFactor != zoomFactor) {
 		
@@ -65,6 +75,8 @@ public class WorldPoint implements IDrawableElement {
 				Math.round(y * zoomFactor) - Globals.POINT_SIZE / 2, 
 				Globals.POINT_SIZE, 
 				Globals.POINT_SIZE);
+		
+		gfx.setColor(temp);
 	}
 
 	@Override
@@ -83,5 +95,11 @@ public class WorldPoint implements IDrawableElement {
 		
 		return new WorldPointPanel(this, 
 				ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("WorldPointPanel.title"));
+	}
+
+	@Override
+	public void setSelected(boolean selected) {
+		
+		this.selected = selected;
 	}
 }

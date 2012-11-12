@@ -1,9 +1,11 @@
 package ca.squadcar.games.editor.elements;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
+import ca.squadcar.games.editor.Globals;
 import ca.squadcar.games.editor.gui.CurvePanel;
 import ca.squadcar.games.editor.gui.PropertiesPanel;
 
@@ -15,12 +17,14 @@ public class QuadraticBezierCurve implements IDrawableElement {
 	public int numSegments;
 	private ArrayList<Line> lines;
 	private transient Rectangle2D.Float boundingBox;
+	private transient boolean selected;
 	
 	public QuadraticBezierCurve(final WorldPoint firstPoint, final int numSegments) {
 		
 		this.first = new WorldPoint(firstPoint);
 		this.lines = new ArrayList<Line>();
 		this.numSegments = numSegments;
+		this.selected = false;
 	}
 	
 	public QuadraticBezierCurve(final QuadraticBezierCurve curve) {
@@ -30,6 +34,7 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		this.third = new WorldPoint(curve.third);
 		this.numSegments = curve.numSegments;
 		this.lines = new ArrayList<Line>();
+		this.selected = false;
 		
 		// re-create the lines and bounding box...
 		init();
@@ -151,6 +156,12 @@ public class QuadraticBezierCurve implements IDrawableElement {
 	@Override
 	public void draw(Graphics gfx, final float zoomFactor) {
 		
+		Color temp = gfx.getColor();
+		if(selected) {
+			
+			gfx.setColor(Globals.SELECTED_COLOR);
+		}
+		
 		for(Line line : lines) {
 			
 			line.draw(gfx, zoomFactor);
@@ -171,6 +182,8 @@ public class QuadraticBezierCurve implements IDrawableElement {
 					Math.round(boundingBox.height * zoomFactor));
 		}
 		*/
+		
+		gfx.setColor(temp);
 	}
 	
 	@Override
@@ -205,5 +218,11 @@ public class QuadraticBezierCurve implements IDrawableElement {
 	public PropertiesPanel getPropertiesPanel() {
 		
 		return new CurvePanel(this);
+	}
+
+	@Override
+	public void setSelected(boolean selected) {
+		
+		this.selected = selected;
 	}
 }

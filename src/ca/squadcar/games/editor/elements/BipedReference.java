@@ -71,4 +71,10 @@ public class BipedReference implements IDrawableElement {
 		// no-op, doesn't apply
 		return null;
 	}
+
+	@Override
+	public void setSelected(boolean selected) {
+		
+		// no-op, can't be selected
+	}
 }

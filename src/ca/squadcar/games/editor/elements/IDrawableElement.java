@@ -11,4 +11,6 @@ public interface IDrawableElement {
 	public boolean hitTest(final float x, final float y);
 	
 	public PropertiesPanel getPropertiesPanel();
+	
+	public void setSelected(boolean selected);
 }

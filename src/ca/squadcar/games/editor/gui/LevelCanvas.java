@@ -420,6 +420,36 @@ public class LevelCanvas extends JPanel {
 			}
 		}
 		
-		return null;
+		return lastPoint;
+	}
+	
+	public WorldPoint getLastPoint() {
+		
+		WorldPoint lastPoint = null;
+		
+		if(elements.size() > 0)  {
+			
+			IDrawableElement element = elements.get(elements.size() - 1);
+			if(element instanceof WorldPoint) {
+				
+				lastPoint = (WorldPoint)element;
+			} else if(element instanceof Line) {
+				
+				lastPoint = ((Line)element).end;
+			} else if(element instanceof QuadraticBezierCurve) {
+				
+				lastPoint = ((QuadraticBezierCurve)element).third;
+			}
+		}
+		
+		return lastPoint;
+	}
+	
+	public void selectNone() {
+	
+		for(IDrawableElement element : elements) {
+			
+			element.setSelected(false);
+		}
 	}
 }

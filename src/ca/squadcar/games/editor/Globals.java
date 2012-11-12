@@ -1,5 +1,7 @@
 package ca.squadcar.games.editor;
 
+import java.awt.Color;
+
 public class Globals {
 
 	// the size, in pixels, of a point's circle drawing
@@ -10,4 +12,6 @@ public class Globals {
 	
 	// the increment value for a spinner control
 	final public static double SPINNER_INC = 0.5;
+	
+	final public static Color SELECTED_COLOR = Color.BLUE;
 }
