@@ -15,7 +15,7 @@ public class WorldPoint implements IDrawableElement {
 	public float y;
 	
 	private transient float zoomFactor;
-	private transient Rectangle2D.Float boundingBox;
+	public transient Rectangle2D.Float boundingBox;
 	private transient boolean selected;
 	
 	public WorldPoint(final float x, final float y) {
@@ -56,18 +56,11 @@ public class WorldPoint implements IDrawableElement {
 
 	@Override
 	public void draw(Graphics gfx, float zoomFactor) {
-		
+
 		Color temp = gfx.getColor();
 		if(selected) {
 			
 			gfx.setColor(Globals.SELECTED_COLOR);
-		}
-		
-		// if zoom factor has changed, update our bounding box
-		if(this.zoomFactor != zoomFactor) {
-		
-			this.zoomFactor = zoomFactor;
-			initBoundingBox();
 		}
 		
 		// draw a circle
@@ -77,6 +70,13 @@ public class WorldPoint implements IDrawableElement {
 				Globals.POINT_SIZE);
 		
 		gfx.setColor(temp);
+		
+		// if zoom factor has changed, update our bounding box
+		if(this.zoomFactor != zoomFactor) {
+		
+			this.zoomFactor = zoomFactor;
+			initBoundingBox();
+		}
 	}
 
 	@Override

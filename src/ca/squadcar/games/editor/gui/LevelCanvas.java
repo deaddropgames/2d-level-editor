@@ -333,37 +333,12 @@ public class LevelCanvas extends JPanel {
 		if(prev >= 0) {
 			
 			// get the point that we need to update
-			WorldPoint point = null;
-			if(element instanceof WorldPoint) {
-				
-				point = (WorldPoint)element;
-			} else if(element instanceof Line) {
-				
-				point = ((Line)element).start;
-			} else if(element instanceof QuadraticBezierCurve) {
-				
-				point = ((QuadraticBezierCurve)element).first;
-			}
+			WorldPoint point = getStartPoint(element);
 			
 			// update the appropriate point on the neighbor
-			IDrawableElement prevElement = elements.get(prev);
 			if(point != null) {
 				
-				if(prevElement instanceof WorldPoint) {
-					
-					((WorldPoint)prevElement).x = point.x;
-					((WorldPoint)prevElement).y = point.y;
-				} else if(prevElement instanceof Line) {
-					
-					((Line)prevElement).end.x = point.x;
-					((Line)prevElement).end.y = point.y;
-					((Line)prevElement).initBoundingBox();
-				} else if(prevElement instanceof QuadraticBezierCurve) {
-					
-					((QuadraticBezierCurve)prevElement).third.x = point.x;
-					((QuadraticBezierCurve)prevElement).third.y = point.y;
-					((QuadraticBezierCurve)prevElement).init();
-				}
+				setEndPoint(point, elements.get(prev));
 			}
 		}
 	
@@ -371,53 +346,19 @@ public class LevelCanvas extends JPanel {
 		if(next < elements.size()) {
 			
 			// get the point that we need to update
-			WorldPoint point = null;
-			if(element instanceof WorldPoint) {
-				
-				point = (WorldPoint)element;
-			} else if(element instanceof Line) {
-				
-				point = ((Line)element).end;
-			} else if(element instanceof QuadraticBezierCurve) {
-				
-				point = ((QuadraticBezierCurve)element).third;
-			}
+			WorldPoint point = getEndPoint(element);
 			
 			// update the appropriate point on the neighbor
-			IDrawableElement nextElement = elements.get(next);
 			if(point != null) {
 				
-				if(nextElement instanceof WorldPoint) {
-					
-					((WorldPoint)nextElement).x = point.x;
-					((WorldPoint)nextElement).y = point.y;
-				} else if(nextElement instanceof Line) {
-					
-					((Line)nextElement).start.x = point.x;
-					((Line)nextElement).start.y = point.y;
-					((Line)nextElement).initBoundingBox();
-				} else if(nextElement instanceof QuadraticBezierCurve) {
-					
-					((QuadraticBezierCurve)nextElement).first.x = point.x;
-					((QuadraticBezierCurve)nextElement).first.y = point.y;
-					((QuadraticBezierCurve)nextElement).init();
-				}
+				setStartPoint(point, elements.get(next));
 			}
 		}
 		
 		// if we just modified the last element in the list, we need to tell the main frame...
 		if(next == elements.size()) {
 		
-			if(element instanceof WorldPoint) {
-				
-				lastPoint = (WorldPoint)element;
-			} else if(element instanceof Line) {
-				
-				lastPoint = ((Line)element).end;
-			} else if(element instanceof QuadraticBezierCurve) {
-				
-				lastPoint = ((QuadraticBezierCurve)element).third;
-			}
+			lastPoint = getLastPoint();
 		}
 		
 		return lastPoint;
@@ -429,17 +370,7 @@ public class LevelCanvas extends JPanel {
 		
 		if(elements.size() > 0)  {
 			
-			IDrawableElement element = elements.get(elements.size() - 1);
-			if(element instanceof WorldPoint) {
-				
-				lastPoint = (WorldPoint)element;
-			} else if(element instanceof Line) {
-				
-				lastPoint = ((Line)element).end;
-			} else if(element instanceof QuadraticBezierCurve) {
-				
-				lastPoint = ((QuadraticBezierCurve)element).third;
-			}
+			lastPoint = getEndPoint(elements.get(elements.size() - 1));
 		}
 		
 		return lastPoint;
@@ -450,6 +381,116 @@ public class LevelCanvas extends JPanel {
 		for(IDrawableElement element : elements) {
 			
 			element.setSelected(false);
+		}
+	}
+	
+	public WorldPoint deleteElement(IDrawableElement element) {
+		
+		WorldPoint lastPoint = null;
+		
+		int index = elements.indexOf(element);
+		if(index == -1) {
+			
+			return lastPoint;
+		}
+		
+		// this should be the start point...
+		if(index == 0) {
+			
+			// if it just the start point, delete it
+			// otherwise do nothing, since we need the start point...
+			if(elements.size() == 1) {
+				
+				elements.clear();
+			}
+		} else {
+
+			boolean isLast = (index == (elements.size() - 1));
+			
+			// if it was the last element, we just need to tell the main frame to update its current point
+			if(isLast) {
+				
+				elements.remove(index);
+				lastPoint = getLastPoint();
+			} else { // otherwise we need to update the next element
+				
+				setStartPoint(getStartPoint(element), elements.get(index + 1));
+				elements.remove(index);
+			}
+		}
+		
+		return lastPoint;
+	}
+	
+	private static WorldPoint getStartPoint(IDrawableElement element) {
+		
+		WorldPoint point = null;
+		if(element instanceof WorldPoint) {
+			
+			point = (WorldPoint)element;
+		} else if(element instanceof Line) {
+			
+			point = ((Line)element).start;
+		} else if(element instanceof QuadraticBezierCurve) {
+			
+			point = ((QuadraticBezierCurve)element).first;
+		}
+		
+		return point;
+	}
+	
+	private static WorldPoint getEndPoint(IDrawableElement element) {
+		
+		WorldPoint point = null;
+		if(element instanceof WorldPoint) {
+			
+			point = (WorldPoint)element;
+		} else if(element instanceof Line) {
+			
+			point = ((Line)element).end;
+		} else if(element instanceof QuadraticBezierCurve) {
+			
+			point = ((QuadraticBezierCurve)element).third;
+		}
+		
+		return point;
+	}
+	
+	private static void setStartPoint(final WorldPoint point, IDrawableElement element) {
+		
+		if(element instanceof WorldPoint) {
+			
+			((WorldPoint)element).x = point.x;
+			((WorldPoint)element).y = point.y;
+		} else if(element instanceof Line) {
+			
+			((Line)element).start.x = point.x;
+			((Line)element).start.y = point.y;
+			((Line)element).initBoundingBox();
+		} else if(element instanceof QuadraticBezierCurve) {
+			
+			((QuadraticBezierCurve)element).first.x = point.x;
+			((QuadraticBezierCurve)element).first.y = point.y;
+			((QuadraticBezierCurve)element).init();
+		}
+	}
+	
+	private static void setEndPoint(final WorldPoint point, IDrawableElement element) {
+		
+		if(element instanceof WorldPoint) {
+			
+			((WorldPoint)element).x = point.x;
+			((WorldPoint)element).y = point.y;
+		} else if(element instanceof Line) {
+			
+			((Line)element).end.x = point.x;
+			((Line)element).end.y = point.y;
+			((Line)element).initBoundingBox();
+		} else if(element instanceof QuadraticBezierCurve) {
+			
+			((QuadraticBezierCurve)element).third.x = point.x;
+			((QuadraticBezierCurve)element).third.y = point.y;
+			((QuadraticBezierCurve)element).init();
 		}
 	}
 }

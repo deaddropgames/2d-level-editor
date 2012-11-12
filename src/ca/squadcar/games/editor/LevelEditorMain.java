@@ -76,9 +76,11 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	private JLabel lblLeftStatuslabel;
 	private JLabel lblRightStatuslabel;
 
+	// west toolbar buttons
 	private JToggleButton tglbtnSelect;
 	private JToggleButton tglbtnAddLine;
 	private JToggleButton tglbtnAddCurve;
+	private JButton btnDelete;
 	
 	private JScrollPane scrollPane;
 	private JButton btnZoomIn;
@@ -552,7 +554,38 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		
 		tglbtnAddCurve = new JToggleButton(new ImageIcon(LevelEditorMain.class.getResource("icons/chart_curve_add.png")));
 		tglbtnAddCurve.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.tglbtnAddCurve.toolTip"));
-		westToolBar.add(tglbtnAddCurve);		
+		westToolBar.add(tglbtnAddCurve);
+		
+		btnDelete = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/delete.png")));
+		btnDelete.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent evt) {
+				
+				if(currElemPropsPanel != null) {
+				
+					WorldPoint point = canvas.deleteElement(currElemPropsPanel.getElement());
+					
+					propertiesPanel.remove(currElemPropsPanel);
+					frmSquadcarGamesLevel.validate();
+					
+					// if we deleted the last element, we need to update our last point
+					if(point != null) {
+						
+						lastPoint = new WorldPoint(point);
+					}
+					
+					canvas.selectNone();
+					btnDelete.setEnabled(false);
+					canvas.repaint();
+					
+					unsavedChanges = true;
+				}
+			}
+		});
+		btnDelete.setBorder(new EmptyBorder(8, 7, 8, 7));
+		btnDelete.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnDelete.toolTip"));
+		btnDelete.setEnabled(false);
+		westToolBar.add(btnDelete);
 		
 		tglbtnSelect.addActionListener(new ActionListener() {
 
@@ -769,6 +802,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		}
 		
 		scrollPane.getViewport().setViewPosition(new Point(0, 0));
+		
+		btnDelete.setEnabled(false);
 	}
 	
 	private boolean checkSavedChanges() {
@@ -810,6 +845,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		tglbtnAddLine.setSelected(true);
 		tglbtnSelect.setSelected(false);
 		tglbtnAddCurve.setSelected(false);
+		btnDelete.setEnabled(false);
 		
 		if(currElemPropsPanel != null) {
 			
@@ -836,6 +872,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		tglbtnAddCurve.setSelected(true);
 		tglbtnSelect.setSelected(false);
 		tglbtnAddLine.setSelected(false);
+		btnDelete.setEnabled(false);
 		
 		if(currElemPropsPanel != null) {
 			
@@ -1018,6 +1055,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			}
 			
 			canvas.selectNone();
+			btnDelete.setEnabled(false);
 			
 			// see if we hit an element that can be edited
 			float zoomFactor = canvas.getZoomFactor();
@@ -1034,6 +1072,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 						propertiesPanel.add(currElemPropsPanel);
 						currElemPropsPanel.addElemChangedListener(this);
 					}
+					
+					btnDelete.setEnabled(true);
 				}
 			}
 		}

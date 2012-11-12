@@ -3,6 +3,7 @@ package ca.squadcar.games.editor.elements;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.Rectangle2D.Float;
 
 import ca.squadcar.games.editor.Globals;
 import ca.squadcar.games.editor.gui.LinePanel;
@@ -15,12 +16,14 @@ public class Line implements IDrawableElement {
 	
 	private transient Rectangle2D.Float boundingBox;
 	private transient boolean selected;
+	private transient float zoomFactor;
 	
 	public Line(final WorldPoint start, final WorldPoint end) {
 		
 	    this.start = new WorldPoint(start);
 		this.end = new WorldPoint(end);
-		
+
+		this.zoomFactor = 0.0f;
 		this.selected = false;
 		
 		initBoundingBox();
@@ -28,16 +31,26 @@ public class Line implements IDrawableElement {
 	
 	public void initBoundingBox() {
 		
-		// TODO: when a line is vertical or horizontal, we should expand the bounding box a bit
-		this.boundingBox = new Rectangle2D.Float(Math.min(start.x, end.x), 
+		// when a line is vertical or horizontal, we should expand the bounding box a bit
+		boundingBox = new Rectangle2D.Float(Math.min(start.x, end.x), 
 				Math.min(start.y, end.y), 
 				Math.abs(start.x - end.x), 
 				Math.abs(start.y - end.y));
+		
+		if(start.boundingBox != null) {
+			
+			boundingBox = (Float)boundingBox.createUnion(start.boundingBox);
+		}
+		
+		if(end.boundingBox != null) {
+		
+			boundingBox = (Float)boundingBox.createUnion(end.boundingBox);
+		}
 	}
 
 	@Override
 	public void draw(Graphics gfx, final float zoomFactor) {
-		
+				
 		Color temp = gfx.getColor();
 		if(selected) {
 			
@@ -63,6 +76,13 @@ public class Line implements IDrawableElement {
 		*/
 		
 		gfx.setColor(temp);
+		
+		// if zoom factor has changed, update our bounding box
+		if(this.zoomFactor != zoomFactor) {
+		
+			this.zoomFactor = zoomFactor;
+			initBoundingBox();
+		}
 	}
 
 	@Override
@@ -79,8 +99,37 @@ public class Line implements IDrawableElement {
 			return true;
 		}
 		
-		// TODO if its in the bounding box, perhaps test how far from the line it is?
-		return boundingBox.contains(x, y);
+		// if the bounding box contains the point, calculate how close the point is to the line
+		float distance = 1000.0f;
+		if(boundingBox.contains(x, y)) {
+			
+			// edge cases...
+			// vertical line
+			if(Math.abs(start.x - end.x) < 0.001) {
+				
+				distance = Math.abs(start.x - x);
+			} else if(Math.abs(start.y - end.y) < 0.001) { // horizontal line
+				
+				distance = Math.abs(start.y - y);
+			} else { // do some math to figure it out...
+				
+				// get basic properties of the line
+				float slope = (end.y - start.y) / (end.x - start.x);
+				float intercept = end.y - slope * end.x;
+				float slopeSquared = slope * slope;
+				
+				// figure out where the lines cross
+				float y2 = (y * slopeSquared + x * slope + intercept) / (slopeSquared + 1);
+				float x2 = (y2 - intercept) / slope;
+				
+				// compute the distance between the points
+				float deltaX = x2 - x;
+				float deltaY = y2 - y;
+				distance = (float)Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+			}
+		}
+		
+		return (distance < Globals.HIT_TEST_DIST);
 	}
 
 	@Override
