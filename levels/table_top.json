@@ -1,8 +1,8 @@
 {
-  "name": "",
-  "description": "",
-  "author": "",
-  "revision": 0,
+  "name": "Table Top",
+  "description": "Simple table top jump.",
+  "author": "Tristen Georgiou",
+  "revision": 1,
   "difficulty": 0,
   "elements": [
     {

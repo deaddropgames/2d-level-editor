@@ -1,8 +1,8 @@
 {
-  "name": "",
-  "description": "",
-  "author": "",
-  "revision": 0,
+  "name": "Triple Jump",
+  "description": "Just three easy jumps.",
+  "author": "Tristen Georgiou",
+  "revision": 1,
   "difficulty": 0,
   "elements": [
     {

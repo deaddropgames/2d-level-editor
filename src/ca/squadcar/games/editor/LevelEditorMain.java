@@ -55,6 +55,7 @@ import ca.squadcar.games.editor.elements.WorldPoint;
 import ca.squadcar.games.editor.events.ElementChangedEvent;
 import ca.squadcar.games.editor.events.IElementChangedListener;
 import ca.squadcar.games.editor.gui.LevelCanvas;
+import ca.squadcar.games.editor.gui.LevelSaveDialog;
 import ca.squadcar.games.editor.gui.PropertiesPanel;
 
 import com.google.gson.Gson;
@@ -66,7 +67,6 @@ import javax.swing.BoxLayout;
 
 public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	
-	final private String[] reservedFilenames = {"biped.json", "draw.json", "level.json", "ski.json", "conf.json"};
 	final private String defaultLevelDir = "levels/";
 	final private String defaultTestLevelFilename = "export/test.json";
 	final private String defaultExportDir = "export/";
@@ -98,6 +98,9 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	// drawable element references
 	private WorldPoint lastPoint;
 	private QuadraticBezierCurve currCurve;
+	
+	// dialogs
+	private LevelSaveDialog saveDlg;
 
 	/**
 	 * Launch the application.
@@ -250,7 +253,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			
 			public void actionPerformed(ActionEvent arg0) {
 
-				if(chooseLevelFilename(defaultExportDir)) {
+				if(chooseLevelFilename(true, defaultExportDir)) {
 						
 					exportLevel(currFilename);
 					return;
@@ -353,7 +356,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			
 			public void actionPerformed(ActionEvent e) {
 				
-				if(chooseLevelFilename(defaultExportDir)) {
+				if(chooseLevelFilename(true, defaultExportDir)) {
 					
 					exportLevel(currFilename);
 					return;
@@ -638,6 +641,10 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		propertiesPanel = new JPanel();
 		frmSquadcarGamesLevel.getContentPane().add(propertiesPanel, BorderLayout.EAST);
 		propertiesPanel.setLayout(new BoxLayout(propertiesPanel, BoxLayout.Y_AXIS));
+		
+		saveDlg = new LevelSaveDialog();
+		
+		frmSquadcarGamesLevel.setLocationRelativeTo(null);
 	}
 	
 	private void updateForZoom() {
@@ -658,10 +665,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		}
 	}
 	
-	private boolean chooseLevelFilename(final String defaultDir) {
-		
-		// TODO: need dialog to get level metadata like title and description, etc...
-		//       this dialog can have a file picker element on it
+	private boolean chooseLevelFilename(boolean isExport, final String defaultDir) {
 		
 		// make sure there is something to save...
 		if(!canvas.hasElements()) {
@@ -672,47 +676,20 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 					JOptionPane.WARNING_MESSAGE);
 			return false;
 		}
+
+		saveDlg.updateForMeta(isExport, defaultDir, currFilename, canvas.getLevelForSave());
+		saveDlg.setLocationRelativeTo(frmSquadcarGamesLevel);
+		saveDlg.setVisible(true);
 		
-		JFileChooser fc;
-		if(currFilename != null) {
+		if(saveDlg.wasCancelled()) {
 			
-			fc = new JFileChooser(new File(currFilename));
-		} else {
-			
-			// default directory?
-			fc = new JFileChooser(new File(defaultDir));
+			return false;
 		}
 
-		FileNameExtensionFilter filter = new FileNameExtensionFilter(
-				ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.levelFiles.fileType.text"), 
-				"json");
-		fc.setFileFilter(filter);
-		int returnVal = fc.showSaveDialog(frmSquadcarGamesLevel);
-		if(returnVal == JFileChooser.APPROVE_OPTION) {
-			
-			File file = fc.getSelectedFile();
-			if(!file.exists() || JOptionPane.showConfirmDialog(fc, ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.existsMsg.text")) == JOptionPane.YES_OPTION) {
-				
-				// save to disk
-				for(String test : reservedFilenames) {
-					
-					if(test.compareToIgnoreCase(file.getName()) == 0) {
-						
-						JOptionPane.showMessageDialog(fc, 
-								ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.reservedFileMsg.text"),
-								ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.fileChooser.reservedFileMsg.title"),
-								JOptionPane.ERROR_MESSAGE);
-						return false;
-					}
-				}
-				
-				currFilename = file.getAbsolutePath();
-				return true;
-			}
-		}
+		currFilename = saveDlg.getFilename();
 		
 		// if we get here...user cancelled
-		return false;
+		return true;
 	}
 	
 	private void saveLevel(final String filename) {
@@ -731,7 +708,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			return;
 		}
 		
-		// TODO: need to also save the level metadata
+		saveDlg.updateSaveLevel(level);
 		
 		Gson json = new GsonBuilder().setPrettyPrinting().create();
 		try {
@@ -746,6 +723,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		}
 		
 		unsavedChanges = false;
+		lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.levelSaved"));
 	}
 	
 	/**
@@ -773,6 +751,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			return;
 		}
 		
+		saveDlg.updateExportLevel(level);
+		
 		// we still consider their to be saved changes on an export...
 		Gson json = new GsonBuilder().setPrettyPrinting().create();
 		try {
@@ -781,6 +761,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			BufferedWriter out = new BufferedWriter(new FileWriter(filename));
 			out.write(data);
 			out.close();
+			lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.levelExported"));
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -948,9 +929,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		
 		if(currFilename == null) {
 
-			if(chooseLevelFilename(defaultLevelDir)) {
+			if(!chooseLevelFilename(false, defaultLevelDir)) {
 				
-				saveLevel(currFilename);
 				return;
 			}
 		}
@@ -960,7 +940,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	
 	private void saveLevelAs() {
 		
-		if(chooseLevelFilename(defaultLevelDir)) {
+		if(chooseLevelFilename(false, defaultLevelDir)) {
 			
 			saveLevel(currFilename);
 		}

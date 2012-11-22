@@ -11,6 +11,7 @@ import ca.squadcar.games.editor.elements.IDrawableElement;
 import ca.squadcar.games.editor.elements.Line;
 import ca.squadcar.games.editor.elements.QuadraticBezierCurve;
 import ca.squadcar.games.editor.elements.WorldPoint;
+import ca.squadcar.games.editor.export.Level;
 
 import com.google.gson.Gson;
 
@@ -33,6 +34,7 @@ public class LevelCanvas extends JPanel {
 	private Dimension canvasDim;
 	private BipedReference bipedRef;
 	private IDrawableElement lastHitElement;
+	private JsonLevel level;
 	
 	/**
 	 * Custom panel for drawing onto
@@ -125,14 +127,14 @@ public class LevelCanvas extends JPanel {
 		return (elements.size() > 0);
 	}
 	
-	public ca.squadcar.games.editor.export.Level getLevelForExport() {
+	public Level getLevelForExport() {
 		
 		if(elements.size() == 0) {
 			
 			return null;
 		}
 	
-		ca.squadcar.games.editor.export.Level level = new ca.squadcar.games.editor.export.Level();
+		Level level = new Level();
 		
 		// assume a single polyline for now...
 		level.polyLines = new ca.squadcar.games.editor.export.PolyLine[1];
@@ -210,7 +212,7 @@ public class LevelCanvas extends JPanel {
 		}
 		
 		IDrawableElement element;
-		JsonLevel level = new JsonLevel(elements.size());
+		JsonLevel level = new JsonLevel(elements.size(), this.level);
 		for(int ii = 0; ii < elements.size(); ii++) {
 			
 			element = elements.get(ii);
@@ -232,12 +234,14 @@ public class LevelCanvas extends JPanel {
 	public void reset() {
 		
 		elements.clear();
+		level = null;
 	}
 	
 	public boolean loadLevelFromFile(final File levelFile) throws IOException {
 		
+		level = null;
+		
 		BufferedReader br = null;
-		JsonLevel jsonLevel = null;
 		try {
 			
 			br = new BufferedReader(new FileReader(levelFile));
@@ -251,7 +255,7 @@ public class LevelCanvas extends JPanel {
 	        }
 			
 			Gson gson = new Gson();
-			jsonLevel = gson.fromJson(sb.toString(), JsonLevel.class);
+			level = gson.fromJson(sb.toString(), JsonLevel.class);
 		} catch(Exception ex) {
 			
 			ex.printStackTrace();
@@ -264,12 +268,12 @@ public class LevelCanvas extends JPanel {
 			}
 		}
 		
-		if(jsonLevel == null) {
+		if(level == null) {
 			
 			return false;
 		}
 		
-		for(JsonElement jsonElement : jsonLevel.elements) {
+		for(JsonElement jsonElement : level.elements) {
 			
 			IDrawableElement element = jsonElement.toDrawableElement();
 			if(element == null) {

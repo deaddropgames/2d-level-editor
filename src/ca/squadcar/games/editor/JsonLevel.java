@@ -14,17 +14,28 @@ public class JsonLevel {
 		name = "";
 		description = "";
 		author = "";
-		revision = 0;
+		revision = 1;
 		difficulty = 0;
 	}
 	
-	public JsonLevel(int numElements) {
+	public JsonLevel(int numElements, final JsonLevel level) {
 		
-		name = "";
-		description = "";
-		author = "";
-		revision = 0;
-		difficulty = 0;
+		if(level == null) {
+			
+			name = "";
+			description = "";
+			author = "";
+			revision = 1;
+			difficulty = 0;
+		} else {
+			
+			name = level.name;
+			description = level.description;
+			author = level.author;
+			revision = level.revision;
+			difficulty = level.difficulty;
+		}
+		
 		elements = new JsonElement[numElements];
 	}
 }
