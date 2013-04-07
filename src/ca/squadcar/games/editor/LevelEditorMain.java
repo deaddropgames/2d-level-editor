@@ -172,8 +172,9 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	private void initialize() {
 		frmSquadcarGamesLevel = new JFrame();
 		frmSquadcarGamesLevel.addWindowListener(new WindowAdapter() {
+			
 			@Override
-			public void windowClosing(WindowEvent arg0) {
+			public void windowClosing(WindowEvent evt) {
 				
 				if(!checkSavedChanges()) {
 					
@@ -265,6 +266,59 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		JSeparator separator_2 = new JSeparator();
 		mnFile.add(separator_2);
 		mnFile.add(mntmQuit);
+		
+		JMenu mnDraw = new JMenu(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mnDraw.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		menuBar.add(mnDraw);
+		
+		JMenuItem mntmEdit = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmSelect.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		mntmEdit.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent arg0) {
+				
+				setSelectMode();
+			}
+		});
+		mntmEdit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, 0));
+		mnDraw.add(mntmEdit);
+		
+		JSeparator separator_5 = new JSeparator();
+		mnDraw.add(separator_5);
+		
+		JMenuItem mntmLine = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmLine.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		mntmLine.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+				
+				setLineMode();
+			}
+		});
+		mntmLine.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, 0));
+		mnDraw.add(mntmLine);
+		
+		JMenuItem mntmBezierCurve = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmBezierCurve.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		mntmBezierCurve.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+				
+				setCurveMode();
+			}
+		});
+		mntmBezierCurve.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, 0));
+		mnDraw.add(mntmBezierCurve);
+		
+		JSeparator separator_6 = new JSeparator();
+		mnDraw.add(separator_6);
+		
+		JMenuItem mntmDeleteSelected = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmDeleteSelected.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		mntmDeleteSelected.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+				
+				deleteSelectedElement();
+			}
+		});
+		mntmDeleteSelected.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
+		mnDraw.add(mntmDeleteSelected);
 		
 		JMenu mnHelp = new JMenu(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mnHelp.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		menuBar.add(mnHelp);
@@ -564,25 +618,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			
 			public void actionPerformed(ActionEvent evt) {
 				
-				if(currElemPropsPanel != null) {
-				
-					WorldPoint point = canvas.deleteElement(currElemPropsPanel.getElement());
-					
-					propertiesPanel.remove(currElemPropsPanel);
-					frmSquadcarGamesLevel.validate();
-					
-					// if we deleted the last element, we need to update our last point
-					if(point != null) {
-						
-						lastPoint = new WorldPoint(point);
-					}
-					
-					canvas.selectNone();
-					btnDelete.setEnabled(false);
-					canvas.repaint();
-					
-					unsavedChanges = true;
-				}
+				deleteSelectedElement();
 			}
 		});
 		btnDelete.setBorder(new EmptyBorder(8, 7, 8, 7));
@@ -943,6 +979,29 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		if(chooseLevelFilename(false, defaultLevelDir)) {
 			
 			saveLevel(currFilename);
+		}
+	}
+	
+	private void deleteSelectedElement() {
+
+		if(currElemPropsPanel != null) {
+		
+			WorldPoint point = canvas.deleteElement(currElemPropsPanel.getElement());
+			
+			propertiesPanel.remove(currElemPropsPanel);
+			frmSquadcarGamesLevel.validate();
+			
+			// if we deleted the last element, we need to update our last point
+			if(point != null) {
+				
+				lastPoint = new WorldPoint(point);
+			}
+			
+			canvas.selectNone();
+			btnDelete.setEnabled(false);
+			canvas.repaint();
+			
+			unsavedChanges = true;
 		}
 	}
 

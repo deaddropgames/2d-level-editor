@@ -1,9 +1,9 @@
 {
-  "name": "Step Up",
-  "description": "Starts with a step up and ends with a couple of deadly gaps.",
-  "author": "Tristen Georgiou",
+  "name": "",
+  "description": "",
+  "author": "",
   "revision": 1,
-  "difficulty": 2,
+  "difficulty": 0,
   "elements": [
     {
       "type": 1,
