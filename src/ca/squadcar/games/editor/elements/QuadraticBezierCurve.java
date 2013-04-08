@@ -18,6 +18,7 @@ public class QuadraticBezierCurve implements IDrawableElement {
 	private ArrayList<Line> lines;
 	private transient Rectangle2D.Float boundingBox;
 	private transient boolean selected;
+	private transient WorldPoint selectedPoint;
 	
 	public QuadraticBezierCurve(final WorldPoint firstPoint, final int numSegments) {
 		
@@ -25,6 +26,7 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		this.lines = new ArrayList<Line>();
 		this.numSegments = numSegments;
 		this.selected = false;
+		this.selectedPoint = null;
 	}
 	
 	public QuadraticBezierCurve(final QuadraticBezierCurve curve) {
@@ -146,6 +148,10 @@ public class QuadraticBezierCurve implements IDrawableElement {
 				minY, 
 				Math.abs(maxX - minX), 
 				Math.abs(maxY - minY));
+		
+		first.init();
+		second.init();
+		third.init();
 	}
 	
 	public ArrayList<Line> getLines() {
@@ -162,15 +168,28 @@ public class QuadraticBezierCurve implements IDrawableElement {
 			gfx.setColor(Globals.SELECTED_COLOR);
 		}
 		
-		for(Line line : lines) {
+		if(first != null) {
 			
-			line.draw(gfx, zoomFactor);
+			first.draw(gfx, zoomFactor);
 		}
 		
-		// draw the second point since it won't be on any of the lines
+		// draw the curve without the intermediate points
+		for(Line line : lines) {
+			
+			gfx.drawLine(Math.round(line.start.x * zoomFactor), 
+					Math.round(line.start.y * zoomFactor), 
+					Math.round(line.end.x * zoomFactor), 
+					Math.round(line.end.y * zoomFactor));
+		}
+		
 		if(second != null) {
 			
 			second.draw(gfx, zoomFactor);
+		}
+		
+		if(third != null) {
+			
+			third.draw(gfx, zoomFactor);
 		}
 		
 		/* for testing...
@@ -194,11 +213,23 @@ public class QuadraticBezierCurve implements IDrawableElement {
 			return false;
 		}
 		
+		this.selectedPoint = null;
+		
 		// if we are within the bounding box, check if we clicked any of the points or the lines
 		if(boundingBox.contains(x, y)) {
 			
 			if(first.hitTest(x, y) || second.hitTest(x, y) || third.hitTest(x, y)) {
 				
+				if(first.hitTest(x, y)) {
+					
+					this.selectedPoint = first;
+				} else if(second.hitTest(x, y)) {
+					
+					this.selectedPoint = second;
+				} else {
+					
+					this.selectedPoint = third;
+				}
 				return true;
 			}
 			
@@ -224,5 +255,11 @@ public class QuadraticBezierCurve implements IDrawableElement {
 	public void setSelected(boolean selected) {
 		
 		this.selected = selected;
+	}
+
+	@Override
+	public WorldPoint getSelectedPoint() {
+		
+		return this.selectedPoint;
 	}
 }

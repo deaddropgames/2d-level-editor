@@ -5,7 +5,7 @@ import java.awt.Color;
 public class Globals {
 
 	// the size, in pixels, of a point's circle drawing
-	final public static int POINT_SIZE = 4;
+	final public static int POINT_SIZE = 8;
 	
 	// the absolute maximum of a spinner control's x/y
 	final public static double SPINNER_EXTENT = 10000.0;

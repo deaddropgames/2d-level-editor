@@ -94,6 +94,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	private String currFilename;
 	private boolean unsavedChanges;
 	private Point viewportCentre;
+	private WorldPoint mousePressedPoint; // when a use clicks and holds on a point...
 	
 	// drawable element references
 	private WorldPoint lastPoint;
@@ -124,6 +125,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	public LevelEditorMain() {
 		
 		inDrawingMode = false;
+		mousePressedPoint = null;
 		
 		editorSettings = new EditorSettings();
 		BufferedReader br = null;
@@ -540,6 +542,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		canvas = new LevelCanvas();
 		canvas.addMouseListener(this);
 		canvas.addMouseMotionListener(new MouseMotionAdapter() {
+			
 			@Override
 			public void mouseMoved(MouseEvent evt) {
 				
@@ -556,6 +559,40 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				}
 				
 				lblRightStatuslabel.setText(String.format("(%.2f, %.2f)", (evt.getPoint().x / zoomFactor), (-evt.getPoint().y / zoomFactor)));
+			}
+			
+			@Override
+			public void mouseDragged(MouseEvent evt) {
+				
+				if(mousePressedPoint != null) {
+					
+					float zoomFactor = canvas.getZoomFactor();
+					mousePressedPoint.x = (evt.getPoint().x / zoomFactor);
+					mousePressedPoint.y = (evt.getPoint().y / zoomFactor);
+					
+					IDrawableElement hitElement = canvas.getLastHitElement();
+					if(hitElement != null) {
+						
+						// update for it's motion
+						hitElement.init();
+						
+						// if the element that changed has neighbors, we will need to update them as well
+						WorldPoint point = canvas.updateNeighbors(hitElement);
+						
+						// the above function will return a point if the last element was modified...in this case we need to update our lastPoint
+						if(point != null) {
+							
+							lastPoint = new WorldPoint(point);
+						}
+						
+						canvas.repaint();
+						
+						unsavedChanges = true;
+					} else { // this shouldn't happen, but just in case...
+						
+						mousePressedPoint = null;
+					}
+				}
 			}
 		});
 		
@@ -1009,7 +1046,9 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	public void elementChanged(ElementChangedEvent event) {
 
 		// if the element that changed has neighbors, we will need to update them as well
-		WorldPoint point = canvas.updateNeighbors(((PropertiesPanel)event.getSource()).getElement());
+		IDrawableElement elem = ((PropertiesPanel)event.getSource()).getElement();
+		elem.init();
+		WorldPoint point = canvas.updateNeighbors(elem);
 		
 		// the above function will return a point if the last element was modified...in this case we need to update our lastPoint
 		if(point != null) {
@@ -1025,10 +1064,60 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	@Override
 	public void mouseClicked(MouseEvent evt) {
 		
-		if(inDrawingMode) {
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent evt) {
+
+	}
+
+	@Override
+	public void mouseExited(MouseEvent evt) {
+
+	}
+
+	@Override
+	public void mousePressed(MouseEvent evt) {
+
+		// if mouse is pressed and held in edit mode, we want to move the selected point, if any
+		// TODO: we could also possible translate the element with the mouse, if a point wasn't selected...
+		if(evt.getButton() == MouseEvent.BUTTON1) {
 			
-			// left click means add a point
-			if(evt.getButton() == MouseEvent.BUTTON1) {
+			if(!inDrawingMode) {
+
+				// clear out the properties and update all elements to not selected
+				if(currElemPropsPanel != null) {
+					
+					currElemPropsPanel.removeElemChangedListener(this);
+					propertiesPanel.remove(currElemPropsPanel);
+				}
+				
+				canvas.selectNone();
+				btnDelete.setEnabled(false);
+				
+				float zoomFactor = canvas.getZoomFactor();
+				if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
+					
+					IDrawableElement hitElement = canvas.getLastHitElement();
+					if(hitElement != null) {
+						
+						mousePressedPoint = hitElement.getSelectedPoint();
+						hitElement.setSelected(true);
+					}
+				}
+			}
+			
+			frmSquadcarGamesLevel.validate();
+			canvas.repaint();
+		}
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent evt) {
+		
+		if(evt.getButton() == MouseEvent.BUTTON1) {
+		
+			if(inDrawingMode) {
 				
 				float zoomFactor = canvas.getZoomFactor();
 				WorldPoint point = new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor));
@@ -1082,25 +1171,10 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				lastPoint = new WorldPoint(point);
 				
 				unsavedChanges = true;
-			}
-		} else {
-			
-			// in edit mode
-			// clear out the properties and update all elements to not selected
-			if(currElemPropsPanel != null) {
+			} else {
 				
-				currElemPropsPanel.removeElemChangedListener(this);
-				propertiesPanel.remove(currElemPropsPanel);
-			}
-			
-			canvas.selectNone();
-			btnDelete.setEnabled(false);
-			
-			// see if we hit an element that can be edited
-			float zoomFactor = canvas.getZoomFactor();
-			if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
-				
-				// show the options pane for this element
+				// in edit mode
+				// show the options pane for this element - element would have been hit by previous call to mouse pressed
 				IDrawableElement hitElement = canvas.getLastHitElement();
 				if(hitElement != null) {
 					
@@ -1115,30 +1189,12 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 					btnDelete.setEnabled(true);
 				}
 			}
+			
+			frmSquadcarGamesLevel.validate();
+			canvas.repaint();
+	
+			// clear out the last pressed point - used during mouse dragged events
+			mousePressedPoint = null;
 		}
-		
-		frmSquadcarGamesLevel.validate();
-		
-		canvas.repaint();
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent arg0) {
-
-	}
-
-	@Override
-	public void mouseExited(MouseEvent arg0) {
-
-	}
-
-	@Override
-	public void mousePressed(MouseEvent arg0) {
-
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent arg0) {
-
 	}
 }

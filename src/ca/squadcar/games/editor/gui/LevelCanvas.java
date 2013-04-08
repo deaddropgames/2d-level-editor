@@ -470,7 +470,7 @@ public class LevelCanvas extends JPanel {
 			
 			((Line)element).start.x = point.x;
 			((Line)element).start.y = point.y;
-			((Line)element).initBoundingBox();
+			((Line)element).init();
 		} else if(element instanceof QuadraticBezierCurve) {
 			
 			((QuadraticBezierCurve)element).first.x = point.x;
@@ -489,7 +489,7 @@ public class LevelCanvas extends JPanel {
 			
 			((Line)element).end.x = point.x;
 			((Line)element).end.y = point.y;
-			((Line)element).initBoundingBox();
+			((Line)element).init();
 		} else if(element instanceof QuadraticBezierCurve) {
 			
 			((QuadraticBezierCurve)element).third.x = point.x;

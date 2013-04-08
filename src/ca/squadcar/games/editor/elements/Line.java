@@ -17,6 +17,7 @@ public class Line implements IDrawableElement {
 	private transient Rectangle2D.Float boundingBox;
 	private transient boolean selected;
 	private transient float zoomFactor;
+	private transient WorldPoint selectedPoint;
 	
 	public Line(final WorldPoint start, final WorldPoint end) {
 		
@@ -25,17 +26,21 @@ public class Line implements IDrawableElement {
 
 		this.zoomFactor = 0.0f;
 		this.selected = false;
+		this.selectedPoint = null;
 		
-		initBoundingBox();
+		init();
 	}
 	
-	public void initBoundingBox() {
+	public void init() {
 		
 		// when a line is vertical or horizontal, we should expand the bounding box a bit
 		boundingBox = new Rectangle2D.Float(Math.min(start.x, end.x), 
 				Math.min(start.y, end.y), 
 				Math.abs(start.x - end.x), 
 				Math.abs(start.y - end.y));
+		
+		start.init();
+		end.init();
 		
 		if(start.boundingBox != null) {
 			
@@ -57,12 +62,13 @@ public class Line implements IDrawableElement {
 			gfx.setColor(Globals.SELECTED_COLOR);
 		}
 		
+		start.draw(gfx, zoomFactor);
+		
 		gfx.drawLine(Math.round(start.x * zoomFactor), 
 				Math.round(start.y * zoomFactor), 
 				Math.round(end.x * zoomFactor), 
 				Math.round(end.y * zoomFactor));
 		
-		// we only draw the end, since the previous element in the chain will draw this one...
 		end.draw(gfx, zoomFactor);
 		
 		/* for testing
@@ -81,7 +87,7 @@ public class Line implements IDrawableElement {
 		if(this.zoomFactor != zoomFactor) {
 		
 			this.zoomFactor = zoomFactor;
-			initBoundingBox();
+			init();
 		}
 	}
 
@@ -93,9 +99,12 @@ public class Line implements IDrawableElement {
 			return false;
 		}
 		
+		this.selectedPoint = null;
+		
 		// if either point is hit...
 		if(start.hitTest(x, y) || end.hitTest(x, y)) {
 			
+			this.selectedPoint = start.hitTest(x, y) ? start : end;
 			return true;
 		}
 		
@@ -142,5 +151,11 @@ public class Line implements IDrawableElement {
 	public void setSelected(boolean selected) {
 
 		this.selected = selected;
+	}
+
+	@Override
+	public WorldPoint getSelectedPoint() {
+		
+		return this.selectedPoint;
 	}
 }

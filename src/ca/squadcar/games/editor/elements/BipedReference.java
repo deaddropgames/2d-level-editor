@@ -77,4 +77,14 @@ public class BipedReference implements IDrawableElement {
 		
 		// no-op, can't be selected
 	}
+
+	@Override
+	public WorldPoint getSelectedPoint() {
+		
+		return null;
+	}
+
+	@Override
+	public void init() {
+	}
 }

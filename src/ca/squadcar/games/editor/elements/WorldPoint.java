@@ -39,7 +39,8 @@ public class WorldPoint implements IDrawableElement {
 		return new WorldPoint(this.x * scalar, this.y * scalar);
 	}
 	
-	private void initBoundingBox() {
+	@Override
+	public void init() {
 		
 		if(zoomFactor == 0.0f) {
 			
@@ -75,8 +76,18 @@ public class WorldPoint implements IDrawableElement {
 		if(this.zoomFactor != zoomFactor) {
 		
 			this.zoomFactor = zoomFactor;
-			initBoundingBox();
+			init();
 		}
+		
+		/* to debug bounding boxes...
+		if(boundingBox != null) {
+			
+			gfx.drawRect(Math.round(boundingBox.x * zoomFactor), 
+					Math.round(boundingBox.y * zoomFactor), 
+					Math.round(boundingBox.width * zoomFactor), 
+					Math.round(boundingBox.height * zoomFactor));
+		}
+		*/
 	}
 
 	@Override
@@ -101,5 +112,11 @@ public class WorldPoint implements IDrawableElement {
 	public void setSelected(boolean selected) {
 		
 		this.selected = selected;
+	}
+
+	@Override
+	public WorldPoint getSelectedPoint() {
+		
+		return this.selected ? this : null;
 	}
 }

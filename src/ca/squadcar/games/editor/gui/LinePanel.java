@@ -54,7 +54,7 @@ public class LinePanel extends PropertiesPanel implements IElementChangedListene
 	public void elementChanged(ElementChangedEvent event) {
 		
 		// both points should be updated automatically...just re-init the bounding box
-		((Line)element).initBoundingBox();
+		((Line)element).init();
 		
 		fireElemChangedEvent();
 	}
