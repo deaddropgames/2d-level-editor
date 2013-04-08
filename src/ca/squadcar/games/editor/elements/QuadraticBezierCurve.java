@@ -202,6 +202,24 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		}
 		*/
 		
+		// draw some helper lines for the curve
+		gfx.setColor(Color.LIGHT_GRAY);
+		if(first != null && second != null) {
+			
+			gfx.drawLine(Math.round(first.x * zoomFactor), 
+					Math.round(first.y * zoomFactor), 
+					Math.round(second.x * zoomFactor), 
+					Math.round(second.y * zoomFactor));
+			
+			if(third != null) {
+
+				gfx.drawLine(Math.round(second.x * zoomFactor), 
+						Math.round(second.y * zoomFactor), 
+						Math.round(third.x * zoomFactor), 
+						Math.round(third.y * zoomFactor));
+			}
+		}
+		
 		gfx.setColor(temp);
 	}
 	
