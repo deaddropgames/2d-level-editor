@@ -1,5 +1,12 @@
 package ca.squadcar.games.editor;
 
+import java.util.ArrayList;
+
+import ca.squadcar.games.editor.elements.IDrawableElement;
+import ca.squadcar.games.editor.elements.Line;
+import ca.squadcar.games.editor.elements.QuadraticBezierCurve;
+import ca.squadcar.games.editor.elements.WorldPoint;
+
 public class JsonLevel {
 
 	public String name;
@@ -7,7 +14,7 @@ public class JsonLevel {
 	public String author;
 	public int revision;
 	public int difficulty;
-	public JsonElement[] elements;
+	public JsonElementList[] elementLists;
 	
 	public JsonLevel() {
 		
@@ -18,7 +25,7 @@ public class JsonLevel {
 		difficulty = 0;
 	}
 	
-	public JsonLevel(int numElements, final JsonLevel level) {
+	public JsonLevel(ArrayList<ArrayList<IDrawableElement>> elements, final JsonLevel level) {
 		
 		if(level == null) {
 			
@@ -36,6 +43,27 @@ public class JsonLevel {
 			difficulty = level.difficulty;
 		}
 		
-		elements = new JsonElement[numElements];
+		elementLists = new JsonElementList[elements.size()];
+		ArrayList<IDrawableElement> currList = null;
+		IDrawableElement element = null;
+		for(int ii = 0; ii < elements.size(); ii++) {
+			
+			currList = elements.get(ii);
+			elementLists[ii] = new JsonElementList(currList.size());
+			for(int jj = 0; jj < currList.size(); jj++) {
+				
+				element = currList.get(jj);
+				if(element instanceof WorldPoint) {
+					
+					elementLists[ii].elements[jj] = new JsonElement((WorldPoint)element);
+				} else if(element instanceof Line) {
+					
+					elementLists[ii].elements[jj] = new JsonElement((Line)element);
+				} else if(element instanceof QuadraticBezierCurve) {
+
+					elementLists[ii].elements[jj] = new JsonElement((QuadraticBezierCurve)element);
+				}
+			}
+		}
 	}
 }

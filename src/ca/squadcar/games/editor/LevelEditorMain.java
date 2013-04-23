@@ -95,6 +95,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	private boolean unsavedChanges;
 	private Point viewportCentre;
 	private WorldPoint mousePressedPoint; // when a use clicks and holds on a point...
+	private boolean justDragged;
+	private boolean currElemIsNew; // is true when we have started a new polyline (i.e. not connected to a previous element)
 	
 	// drawable element references
 	private WorldPoint lastPoint;
@@ -126,6 +128,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		
 		inDrawingMode = false;
 		mousePressedPoint = null;
+		justDragged = false;
+		currElemIsNew = false;
 		
 		editorSettings = new EditorSettings();
 		BufferedReader br = null;
@@ -185,17 +189,20 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				System.exit(0);
 			}
 		});
-		frmSquadcarGamesLevel.setTitle(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.frmSquadcarGamesLevel.title")); //$NON-NLS-1$ //$NON-NLS-2$
+		frmSquadcarGamesLevel.setTitle(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.frmSquadcarGamesLevel.title")); //$NON-NLS-1$ //$NON-NLS-2$
 		frmSquadcarGamesLevel.setBounds(100, 100, 800, 600);
 		frmSquadcarGamesLevel.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		
 		JMenuBar menuBar = new JMenuBar();
 		frmSquadcarGamesLevel.setJMenuBar(menuBar);
 		
-		JMenu mnFile = new JMenu(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mnFile.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenu mnFile = new JMenu(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mnFile.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		menuBar.add(mnFile);
 		
-		JMenuItem mntmQuit = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmQuit.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenuItem mntmQuit = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mntmQuit.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		mntmQuit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
 		mntmQuit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -208,7 +215,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			}
 		});
 		
-		JMenuItem mntmNew = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmNew.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenuItem mntmNew = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mntmNew.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		mntmNew.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
@@ -217,7 +225,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		});
 		mnFile.add(mntmNew);
 		
-		JMenuItem mntmOpen = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmOpen.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenuItem mntmOpen = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mntmOpen.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		mntmOpen.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
@@ -229,7 +238,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		JSeparator separator_1 = new JSeparator();
 		mnFile.add(separator_1);
 		
-		JMenuItem mntmSave = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmSave.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenuItem mntmSave = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mntmSave.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		mntmSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
@@ -239,7 +249,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
 		mnFile.add(mntmSave);
 		
-		JMenuItem mntmSaveAs = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmSaveAs.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenuItem mntmSaveAs = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mntmSaveAs.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		mntmSaveAs.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
@@ -251,7 +262,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		JSeparator separator = new JSeparator();
 		mnFile.add(separator);
 		
-		JMenuItem mntmExport = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmExport.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenuItem mntmExport = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mntmExport.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		mntmExport.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent arg0) {
@@ -269,10 +281,12 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		mnFile.add(separator_2);
 		mnFile.add(mntmQuit);
 		
-		JMenu mnDraw = new JMenu(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mnDraw.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenu mnDraw = new JMenu(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mnDraw.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		menuBar.add(mnDraw);
 		
-		JMenuItem mntmEdit = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmSelect.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenuItem mntmEdit = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mntmSelect.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		mntmEdit.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent arg0) {
@@ -286,7 +300,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		JSeparator separator_5 = new JSeparator();
 		mnDraw.add(separator_5);
 		
-		JMenuItem mntmLine = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmLine.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenuItem mntmLine = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mntmLine.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		mntmLine.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
@@ -297,7 +312,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		mntmLine.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, 0));
 		mnDraw.add(mntmLine);
 		
-		JMenuItem mntmBezierCurve = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmBezierCurve.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenuItem mntmBezierCurve = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mntmBezierCurve.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		mntmBezierCurve.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
@@ -311,7 +327,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		JSeparator separator_6 = new JSeparator();
 		mnDraw.add(separator_6);
 		
-		JMenuItem mntmDeleteSelected = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmDeleteSelected.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenuItem mntmDeleteSelected = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mntmDeleteSelected.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		mntmDeleteSelected.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
@@ -322,10 +339,12 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		mntmDeleteSelected.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
 		mnDraw.add(mntmDeleteSelected);
 		
-		JMenu mnHelp = new JMenu(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mnHelp.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenu mnHelp = new JMenu(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mnHelp.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		menuBar.add(mnHelp);
 		
-		JMenuItem mntmAbout = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmAbout.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		JMenuItem mntmAbout = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.mntmAbout.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		mntmAbout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JOptionPane.showMessageDialog(frmSquadcarGamesLevel,
@@ -493,9 +512,11 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				if(!simJar.exists()) {
 					
 					JOptionPane.showMessageDialog(frmSquadcarGamesLevel, 
-							String.format(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnTestLevel.simJarNotExists.text"),
+							String.format(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+								getString("LevelEditorMain.btnTestLevel.simJarNotExists.text"),
 									editorSettings.simJar),
-							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.btnTestLevel.simJarNotExists.title"),
+							ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+								getString("LevelEditorMain.btnTestLevel.simJarNotExists.title"),
 							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
@@ -532,10 +553,12 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		frmSquadcarGamesLevel.getContentPane().add(statusPanel, BorderLayout.SOUTH);
 		statusPanel.setLayout(new GridLayout(1, 2, 0, 0));
 		
-		lblLeftStatuslabel = new JLabel(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		lblLeftStatuslabel = new JLabel(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.lblLeftStatuslabel.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		statusPanel.add(lblLeftStatuslabel);
 		
-		lblRightStatuslabel = new JLabel(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblRightStatuslabel.text"));
+		lblRightStatuslabel = new JLabel(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+				getString("LevelEditorMain.lblRightStatuslabel.text"));
 		lblRightStatuslabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		statusPanel.add(lblRightStatuslabel);
 		
@@ -547,6 +570,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			public void mouseMoved(MouseEvent evt) {
 				
 				float zoomFactor = canvas.getZoomFactor();
+				WorldPoint point = new WorldPoint(evt.getPoint().x / zoomFactor, evt.getPoint().y / zoomFactor);
 				if(!inDrawingMode) {
 					
 					if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
@@ -556,9 +580,16 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 						
 						canvas.setCursor(Cursor.DEFAULT_CURSOR);
 					}
+				} else { // we are in drawing mode, so if the last point is defined, draw a temp line
+					
+					if(lastPoint != null) {
+						
+						canvas.setGuideLine(new Line(lastPoint, point));
+						canvas.repaint();
+					}
 				}
 				
-				lblRightStatuslabel.setText(String.format("(%.2f, %.2f)", (evt.getPoint().x / zoomFactor), (-evt.getPoint().y / zoomFactor)));
+				lblRightStatuslabel.setText(String.format("(%.2f, %.2f)", point.x, -point.y));
 			}
 			
 			@Override
@@ -577,17 +608,12 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 						hitElement.init();
 						
 						// if the element that changed has neighbors, we will need to update them as well
-						WorldPoint point = canvas.updateNeighbors(hitElement);
-						
-						// the above function will return a point if the last element was modified...in this case we need to update our lastPoint
-						if(point != null) {
-							
-							lastPoint = new WorldPoint(point);
-						}
+						canvas.updateNeighbors(hitElement);
 						
 						canvas.repaint();
 						
 						unsavedChanges = true;
+						justDragged = true;
 					} else { // this shouldn't happen, but just in case...
 						
 						mousePressedPoint = null;
@@ -886,6 +912,9 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		tglbtnSelect.setSelected(true);
 		tglbtnAddLine.setSelected(false);
 		tglbtnAddCurve.setSelected(false);
+		canvas.setGuideLine(null);
+		lastPoint = null;
+		canvas.repaint();
 		lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.selectMode"));
 	}
 	
@@ -988,8 +1017,6 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				ex.printStackTrace();
 			}
 			
-			lastPoint = canvas.getLastPoint();
-			
 			currFilename = levelFile.getAbsolutePath();
 			
 			unsavedChanges = false;
@@ -1023,16 +1050,10 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 
 		if(currElemPropsPanel != null) {
 		
-			WorldPoint point = canvas.deleteElement(currElemPropsPanel.getElement());
+			canvas.deleteElement(currElemPropsPanel.getElement());
 			
 			propertiesPanel.remove(currElemPropsPanel);
 			frmSquadcarGamesLevel.validate();
-			
-			// if we deleted the last element, we need to update our last point
-			if(point != null) {
-				
-				lastPoint = new WorldPoint(point);
-			}
 			
 			canvas.selectNone();
 			btnDelete.setEnabled(false);
@@ -1048,13 +1069,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		// if the element that changed has neighbors, we will need to update them as well
 		IDrawableElement elem = ((PropertiesPanel)event.getSource()).getElement();
 		elem.init();
-		WorldPoint point = canvas.updateNeighbors(elem);
-		
-		// the above function will return a point if the last element was modified...in this case we need to update our lastPoint
-		if(point != null) {
-			
-			lastPoint = new WorldPoint(point);
-		}
+		canvas.updateNeighbors(elem);
 		
 		canvas.repaint();
 		
@@ -1123,25 +1138,28 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				WorldPoint point = new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor));
 				unsavedChanges = true;
 				
-				// if there isn't a start point yet, add that first
+				// if we are starting a new drawable element
 				if(lastPoint == null) {
 					
-					canvas.addDrawableElement(point);
+					currElemIsNew = true; // means we are starting a new chain of drawable elements
 					if(tglbtnAddLine.isSelected()) {
 						
-						lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.lineMode"));
+						lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+								getString("LevelEditorMain.lblLeftStatuslabel.lineMode"));
 					} else if(tglbtnAddCurve.isSelected()) {
 						
 						currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
 						canvas.setTempDrawableElement(currCurve);
-						lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
+						lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+								getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
 					}
-				} else {
+				} else { // we are continuing a drawable element
 					
 					if(tglbtnAddLine.isSelected()) {
 						
 						// assume the last point is the line start
-						canvas.addDrawableElement(new Line(lastPoint, point));
+						canvas.addDrawableElement(new Line(lastPoint, point), currElemIsNew);
+						currElemIsNew = false;
 					} else if(tglbtnAddCurve.isSelected()) {
 						
 						if(currCurve == null) {
@@ -1155,7 +1173,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 							currCurve.addPoint(point);
 							if(currCurve.pointsCount() == 3) {
 								
-								canvas.addDrawableElement(new QuadraticBezierCurve(currCurve));
+								canvas.addDrawableElement(new QuadraticBezierCurve(currCurve), currElemIsNew);
+								currElemIsNew = false;
 								currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
 								canvas.setTempDrawableElement(currCurve);
 								lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
@@ -1172,6 +1191,14 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				
 				unsavedChanges = true;
 			} else {
+				
+				if(justDragged) {
+					
+					justDragged = false;
+					canvas.selectNone();
+					canvas.repaint();
+					return;
+				}
 				
 				// in edit mode
 				// show the options pane for this element - element would have been hit by previous call to mouse pressed
@@ -1195,6 +1222,15 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	
 			// clear out the last pressed point - used during mouse dragged events
 			mousePressedPoint = null;
+		} else if(evt.getButton() == MouseEvent.BUTTON3) { // right click to end line
+			
+			if(inDrawingMode) {
+				
+				canvas.setTempDrawableElement(null);
+				canvas.setGuideLine(null);
+				lastPoint = null;
+				canvas.repaint();
+			}
 		}
 	}
 }

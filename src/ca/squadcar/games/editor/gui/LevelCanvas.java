@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import javax.swing.JPanel;
 
 import ca.squadcar.games.editor.JsonElement;
+import ca.squadcar.games.editor.JsonElementList;
 import ca.squadcar.games.editor.JsonLevel;
 import ca.squadcar.games.editor.elements.BipedReference;
 import ca.squadcar.games.editor.elements.IDrawableElement;
@@ -28,13 +29,16 @@ import java.util.ArrayList;
 @SuppressWarnings("serial")
 public class LevelCanvas extends JPanel {
 
-	private ArrayList<IDrawableElement> elements;
+	private ArrayList<ArrayList<IDrawableElement>> elements;
+	private ArrayList<IDrawableElement> currList;
 	private float zoomFactor;
 	private IDrawableElement temp;
 	private Dimension canvasDim;
 	private BipedReference bipedRef;
 	private IDrawableElement lastHitElement;
+	private ArrayList<IDrawableElement> lastHitList;
 	private JsonLevel level;
+	private Line guideLine; // line drawn from last point to mouse-moved point when in drawing mode
 	
 	/**
 	 * Custom panel for drawing onto
@@ -43,12 +47,14 @@ public class LevelCanvas extends JPanel {
 		
 		setBackground(Color.WHITE);
 		
-		elements = new ArrayList<IDrawableElement>();
+		elements = new ArrayList<ArrayList<IDrawableElement>>();
+		currList = null;
 		zoomFactor = 10.0f;
 		temp = null;
 		canvasDim = null;
 		bipedRef = new BipedReference();
 		lastHitElement = null;
+		guideLine = null;
 		
 		reset();
 	}
@@ -58,9 +64,12 @@ public class LevelCanvas extends JPanel {
 		
 		super.paint(gfx);
 		
-		for(IDrawableElement element : elements) {
+		for(ArrayList<IDrawableElement> list : elements) {
 			
-			element.draw(gfx, zoomFactor);
+			for(IDrawableElement element : list) {
+				
+				element.draw(gfx, zoomFactor);
+			}
 		}
 		
 		if(temp != null) {
@@ -69,6 +78,12 @@ public class LevelCanvas extends JPanel {
 		}
 		
 		bipedRef.draw(gfx, zoomFactor);
+		
+		gfx.setColor(Color.LIGHT_GRAY);
+		if(guideLine != null) {
+			
+			guideLine.draw(gfx, zoomFactor);
+		}
 	}
 	
 	public void setCursor(int cursor) {
@@ -76,9 +91,15 @@ public class LevelCanvas extends JPanel {
 		setCursor(Cursor.getPredefinedCursor(cursor));
 	}
 	
-	public void addDrawableElement(final IDrawableElement element) {
+	public void addDrawableElement(final IDrawableElement element, boolean currElemIsNew) {
 		
-		elements.add(element);
+		if(currElemIsNew) {
+			
+			currList = new ArrayList<IDrawableElement>();
+			elements.add(currList);
+		}
+		
+		currList.add(element);
 	}
 	
 	public void setZoomFactor(final float zoomFactor) {
@@ -117,6 +138,15 @@ public class LevelCanvas extends JPanel {
 		this.temp = temp;
 	}
 	
+	/**
+	 * The guideline will show on mouse movement when in drawing mode
+	 * @param guideLine: the temporary guideline to draw
+	 */
+	public void setGuideLine(Line guideLine) {
+		
+		this.guideLine = guideLine;
+	}
+	
 	public void setCanvasDimension(Dimension dim) {
 		
 		canvasDim = new Dimension(dim);
@@ -135,71 +165,75 @@ public class LevelCanvas extends JPanel {
 		}
 	
 		Level level = new Level();
-		
-		// assume a single polyline for now...
-		level.polyLines = new ca.squadcar.games.editor.export.PolyLine[1];
-		level.polyLines[0] = new ca.squadcar.games.editor.export.PolyLine();
+		level.polyLines = new ca.squadcar.games.editor.export.PolyLine[elements.size()];
 		
 		// we need to translate all points relative to the first
-		WorldPoint transPoint;
-		IDrawableElement firstElem = elements.get(0);
-		if(firstElem instanceof WorldPoint) {
-			
-			transPoint = new WorldPoint((WorldPoint)firstElem);
-		} else { // it's a curve
-			
-			transPoint = new WorldPoint(((QuadraticBezierCurve)firstElem).first);
-		}
-		
-		WorldPoint currPoint;
+		IDrawableElement firstElem = elements.get(0).get(0);
+		WorldPoint transPoint = getStartPoint(firstElem);
 		ArrayList<WorldPoint> points = new ArrayList<WorldPoint>();
-		points.add(new WorldPoint(0.0f, 0.0f)); // first point is always at the origin
-		boolean isFirst = true;
-		for(IDrawableElement element : elements) {
+		WorldPoint currPoint;
+		for(int ii = 0; ii < elements.size(); ii++) {
 			
-			if(isFirst) {
+			points.clear();
+			level.polyLines[ii] = new ca.squadcar.games.editor.export.PolyLine();
+			boolean isFirst = true;
+			for(IDrawableElement element : elements.get(ii)) {
 				
-				isFirst = false;
-				continue;
-			}
-			
-			if(element instanceof WorldPoint) {
-				
-				currPoint = new WorldPoint((WorldPoint)element);
-				currPoint.x -= transPoint.x;
-				currPoint.y -= transPoint.y;
-				currPoint.y *= -1.0f;
-				points.add(currPoint);
-			} else if(element instanceof Line) {
-				
-				Line line = (Line)element;
-				
-				currPoint = new WorldPoint(line.end);
-				currPoint.x -= transPoint.x;
-				currPoint.y -= transPoint.y;
-				currPoint.y *= -1.0f;
-				points.add(new WorldPoint(currPoint));
-			} else if(element instanceof QuadraticBezierCurve) {
-				
-				QuadraticBezierCurve curve = (QuadraticBezierCurve)element;
-				for(Line line : curve.getLines()) {
+				// we add the first point, and then add mid and end points for each successive chain
+				if(isFirst) {
 					
+					if(ii == 0) {
+					
+						points.add(new WorldPoint(0.0f, 0.0f)); // assume very first point is always at the origin
+					} else {
+						
+						currPoint = new WorldPoint(getStartPoint(element));
+						currPoint.x -= transPoint.x;
+						currPoint.y -= transPoint.y;
+						currPoint.y *= -1.0f;
+						points.add(currPoint);
+					}
+					isFirst = false;
+					continue;
+				}
+				
+				if(element instanceof WorldPoint) {
+					
+					currPoint = new WorldPoint((WorldPoint)element);
+					currPoint.x -= transPoint.x;
+					currPoint.y -= transPoint.y;
+					currPoint.y *= -1.0f;
+					points.add(currPoint);
+				} else if(element instanceof Line) {
+					
+					Line line = (Line)element;
 					currPoint = new WorldPoint(line.end);
 					currPoint.x -= transPoint.x;
 					currPoint.y -= transPoint.y;
 					currPoint.y *= -1.0f;
 					points.add(new WorldPoint(currPoint));
+				} else if(element instanceof QuadraticBezierCurve) {
+					
+					QuadraticBezierCurve curve = (QuadraticBezierCurve)element;
+					for(Line line : curve.getLines()) {
+						
+						currPoint = new WorldPoint(line.end);
+						currPoint.x -= transPoint.x;
+						currPoint.y -= transPoint.y;
+						currPoint.y *= -1.0f;
+						points.add(new WorldPoint(currPoint));
+					}
 				}
 			}
-		}
 		
-		if(points.size() <= 1) {
+			if(points.size() <= 1) {
+				
+				continue;
+			}
 			
-			return null;
+			level.polyLines[ii].points = new WorldPoint[points.size()];
+			points.toArray(level.polyLines[ii].points);
 		}
-		
-		level.polyLines[0].points = new WorldPoint[points.size()];
-		points.toArray(level.polyLines[0].points);
 		
 		return level;
 	}
@@ -210,24 +244,8 @@ public class LevelCanvas extends JPanel {
 			
 			return null;
 		}
-		
-		IDrawableElement element;
-		JsonLevel level = new JsonLevel(elements.size(), this.level);
-		for(int ii = 0; ii < elements.size(); ii++) {
-			
-			element = elements.get(ii);
-			if(element instanceof WorldPoint) {
-				
-				level.elements[ii] = new JsonElement((WorldPoint)element);
-			} else if(element instanceof Line) {
-				
-				level.elements[ii] = new JsonElement((Line)element);
-			} else if(element instanceof QuadraticBezierCurve) {
 
-				level.elements[ii] = new JsonElement((QuadraticBezierCurve)element);
-			}
-		}
-
+		JsonLevel level = new JsonLevel(elements, this.level);
 		return level;
 	}
 	
@@ -235,6 +253,8 @@ public class LevelCanvas extends JPanel {
 		
 		elements.clear();
 		level = null;
+		lastHitElement = null;
+		lastHitList = null;
 	}
 	
 	public boolean loadLevelFromFile(final File levelFile) throws IOException {
@@ -273,15 +293,20 @@ public class LevelCanvas extends JPanel {
 			return false;
 		}
 		
-		for(JsonElement jsonElement : level.elements) {
-			
-			IDrawableElement element = jsonElement.toDrawableElement();
-			if(element == null) {
+		for(JsonElementList list : level.elementLists) {
+		
+			currList = new ArrayList<IDrawableElement>();
+			elements.add(currList);
+			for(JsonElement jsonElement : list.elements) {
 				
-				return false;
+				IDrawableElement element = jsonElement.toDrawableElement();
+				if(element == null) {
+					
+					return false;
+				}
+				
+				currList.add(element);
 			}
-			
-			elements.add(element);
 		}
 		
 		return true;
@@ -300,14 +325,19 @@ public class LevelCanvas extends JPanel {
 	public boolean hitTest(final WorldPoint point) {
 
 		lastHitElement = null;
+		lastHitList = null;
 		
 		// convert the mouse point to its world point
-		for(IDrawableElement element : elements) {
+		for(ArrayList<IDrawableElement> list : elements) {
 			
-			if(element.hitTest(point.x, point.y)) {
+			for(IDrawableElement element : list) {
 				
-				lastHitElement = element;
-				return true;
+				if(element.hitTest(point.x, point.y)) {
+					
+					lastHitElement = element;
+					lastHitList = list;
+					return true;
+				}
 			}
 		}
 		
@@ -319,15 +349,17 @@ public class LevelCanvas extends JPanel {
 		return lastHitElement;
 	}
 	
-	public WorldPoint updateNeighbors(final IDrawableElement element) {
+	public void updateNeighbors(final IDrawableElement element) {
 		
-		// if we are modifying the last element, then we need to tell the main frame to update its last point variable...
-		WorldPoint lastPoint = null;
+		if(lastHitList == null) {
+			
+			return;
+		}
 		
-		int index = elements.indexOf(element);
+		int index = lastHitList.indexOf(element);
 		if(index == -1) {
 			
-			return lastPoint;
+			return;
 		}
 		
 		int prev = index - 1;
@@ -342,12 +374,12 @@ public class LevelCanvas extends JPanel {
 			// update the appropriate point on the neighbor
 			if(point != null) {
 				
-				setEndPoint(point, elements.get(prev));
+				setEndPoint(point, lastHitList.get(prev));
 			}
 		}
 	
 		// update the next neighbor...
-		if(next < elements.size()) {
+		if(next < lastHitList.size()) {
 			
 			// get the point that we need to update
 			WorldPoint point = getEndPoint(element);
@@ -355,75 +387,68 @@ public class LevelCanvas extends JPanel {
 			// update the appropriate point on the neighbor
 			if(point != null) {
 				
-				setStartPoint(point, elements.get(next));
+				setStartPoint(point, lastHitList.get(next));
 			}
 		}
-		
-		// if we just modified the last element in the list, we need to tell the main frame...
-		if(next == elements.size()) {
-		
-			lastPoint = getLastPoint();
-		}
-		
-		return lastPoint;
-	}
-	
-	public WorldPoint getLastPoint() {
-		
-		WorldPoint lastPoint = null;
-		
-		if(elements.size() > 0)  {
-			
-			lastPoint = getEndPoint(elements.get(elements.size() - 1));
-		}
-		
-		return lastPoint;
 	}
 	
 	public void selectNone() {
 	
-		for(IDrawableElement element : elements) {
+		for(ArrayList<IDrawableElement> list : elements) {
 			
-			element.setSelected(false);
+			for(IDrawableElement element : list) {
+				
+				element.setSelected(false);
+			}
 		}
+		
+		lastHitElement = null;
+		lastHitList = null;
 	}
 	
-	public WorldPoint deleteElement(IDrawableElement element) {
+	public void deleteElement(IDrawableElement element) {
 		
-		WorldPoint lastPoint = null;
-		
-		int index = elements.indexOf(element);
-		if(index == -1) {
+		if(lastHitList == null) {
 			
-			return lastPoint;
+			return;
 		}
 		
-		// this should be the start point...
+		int index = lastHitList.indexOf(element);
+		if(index == -1) {
+			
+			return;
+		}
+		
+		// check if removing the first element
 		if(index == 0) {
 			
 			// if it just the start point, delete it
 			// otherwise do nothing, since we need the start point...
-			if(elements.size() == 1) {
+			if(lastHitList.size() == 1) {
 				
-				elements.clear();
+				lastHitList.clear();
+				elements.remove(lastHitList);
+				lastHitList = null;
+			} else {
+				
+				lastHitList.remove(index);
 			}
 		} else {
 
-			boolean isLast = (index == (elements.size() - 1));
+			boolean isLast = (index == (lastHitList.size() - 1));
 			
-			// if it was the last element, we just need to tell the main frame to update its current point
+			// if its the last element, remove it
 			if(isLast) {
 				
-				elements.remove(index);
-				lastPoint = getLastPoint();
+				lastHitList.remove(index);
 			} else { // otherwise we need to update the next element
 				
-				setStartPoint(getStartPoint(element), elements.get(index + 1));
-				elements.remove(index);
+				setStartPoint(getStartPoint(element), lastHitList.get(index + 1));
+				lastHitList.remove(index);
 			}
 		}
 		
-		return lastPoint;
+		return;
 	}
 	
 	private static WorldPoint getStartPoint(IDrawableElement element) {
