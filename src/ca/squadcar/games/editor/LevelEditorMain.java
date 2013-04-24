@@ -1033,6 +1033,10 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				
 				return;
 			}
+		} else {
+			
+			// preserve any of the level's meta so we don't write over it with blank data...
+			saveDlg.updateForMeta(false, defaultLevelDir, currFilename, canvas.getLevelForSave());
 		}
 		
 		saveLevel(currFilename);

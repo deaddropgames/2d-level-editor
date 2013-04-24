@@ -29,7 +29,7 @@ import java.util.ArrayList;
 @SuppressWarnings("serial")
 public class LevelCanvas extends JPanel {
 
-	private ArrayList<ArrayList<IDrawableElement>> elements;
+	private ArrayList<ArrayList<IDrawableElement>> elementLists;
 	private ArrayList<IDrawableElement> currList;
 	private float zoomFactor;
 	private IDrawableElement temp;
@@ -46,7 +46,7 @@ public class LevelCanvas extends JPanel {
 		
 		setBackground(Color.WHITE);
 		
-		elements = new ArrayList<ArrayList<IDrawableElement>>();
+		elementLists = new ArrayList<ArrayList<IDrawableElement>>();
 		currList = null;
 		zoomFactor = 10.0f;
 		temp = null;
@@ -63,7 +63,7 @@ public class LevelCanvas extends JPanel {
 		
 		super.paint(gfx);
 		
-		for(ArrayList<IDrawableElement> list : elements) {
+		for(ArrayList<IDrawableElement> list : elementLists) {
 			
 			for(IDrawableElement element : list) {
 				
@@ -95,7 +95,7 @@ public class LevelCanvas extends JPanel {
 		if(currElemIsNew) {
 			
 			currList = new ArrayList<IDrawableElement>();
-			elements.add(currList);
+			elementLists.add(currList);
 		}
 		
 		currList.add(element);
@@ -153,30 +153,30 @@ public class LevelCanvas extends JPanel {
 	
 	public boolean hasElements() {
 		
-		return (elements.size() > 0);
+		return (elementLists.size() > 0);
 	}
 	
 	public Level getLevelForExport() {
 		
-		if(elements.size() == 0) {
+		if(elementLists.size() == 0) {
 			
 			return null;
 		}
 	
 		Level level = new Level();
-		level.polyLines = new ca.squadcar.games.editor.export.PolyLine[elements.size()];
+		level.polyLines = new ca.squadcar.games.editor.export.PolyLine[elementLists.size()];
 		
 		// we need to translate all points relative to the first
-		IDrawableElement firstElem = elements.get(0).get(0);
+		IDrawableElement firstElem = elementLists.get(0).get(0);
 		WorldPoint transPoint = getStartPoint(firstElem);
 		ArrayList<WorldPoint> points = new ArrayList<WorldPoint>();
 		WorldPoint currPoint;
-		for(int ii = 0; ii < elements.size(); ii++) {
+		for(int ii = 0; ii < elementLists.size(); ii++) {
 			
 			points.clear();
 			level.polyLines[ii] = new ca.squadcar.games.editor.export.PolyLine();
 			boolean isFirst = true;
-			for(IDrawableElement element : elements.get(ii)) {
+			for(IDrawableElement element : elementLists.get(ii)) {
 				
 				// we add the first point, and then add mid and end points for each successive chain
 				if(isFirst) {
@@ -239,18 +239,18 @@ public class LevelCanvas extends JPanel {
 	
 	public JsonLevel getLevelForSave() {
 		
-		if(elements.size() == 0) {
+		if(elementLists.size() == 0) {
 			
 			return null;
 		}
 
-		JsonLevel level = new JsonLevel(elements, this.level);
+		JsonLevel level = new JsonLevel(elementLists, this.level);
 		return level;
 	}
 	
 	public void reset() {
 		
-		elements.clear();
+		elementLists.clear();
 		level = null;
 		lastHitElement = null;
 	}
@@ -294,7 +294,7 @@ public class LevelCanvas extends JPanel {
 		for(JsonElementList list : level.elementLists) {
 		
 			currList = new ArrayList<IDrawableElement>();
-			elements.add(currList);
+			elementLists.add(currList);
 			for(JsonElement jsonElement : list.elements) {
 				
 				IDrawableElement element = jsonElement.toDrawableElement();
@@ -325,7 +325,7 @@ public class LevelCanvas extends JPanel {
 		lastHitElement = null;
 		
 		// convert the mouse point to its world point
-		for(ArrayList<IDrawableElement> list : elements) {
+		for(ArrayList<IDrawableElement> list : elementLists) {
 			
 			for(IDrawableElement element : list) {
 				
@@ -393,7 +393,7 @@ public class LevelCanvas extends JPanel {
 	
 	public void selectNone() {
 	
-		for(ArrayList<IDrawableElement> list : elements) {
+		for(ArrayList<IDrawableElement> list : elementLists) {
 			
 			for(IDrawableElement element : list) {
 				
@@ -428,7 +428,7 @@ public class LevelCanvas extends JPanel {
 			if(list.size() == 1) {
 				
 				list.clear();
-				elements.remove(list);
+				elementLists.remove(list);
 			} else {
 				
 				list.remove(index);
@@ -525,7 +525,7 @@ public class LevelCanvas extends JPanel {
 	
 	private ArrayList<IDrawableElement> findListForElement(IDrawableElement element) {
 		
-		for(ArrayList<IDrawableElement> list : elements) {
+		for(ArrayList<IDrawableElement> list : elementLists) {
 			
 			if(list.indexOf(element) >= 0) {
 				

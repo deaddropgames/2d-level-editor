@@ -25,7 +25,7 @@ public class JsonLevel {
 		difficulty = 0;
 	}
 	
-	public JsonLevel(ArrayList<ArrayList<IDrawableElement>> elements, final JsonLevel level) {
+	public JsonLevel(ArrayList<ArrayList<IDrawableElement>> lists, final JsonLevel level) {
 		
 		if(level == null) {
 			
@@ -43,12 +43,12 @@ public class JsonLevel {
 			difficulty = level.difficulty;
 		}
 		
-		elementLists = new JsonElementList[elements.size()];
+		elementLists = new JsonElementList[lists.size()];
 		ArrayList<IDrawableElement> currList = null;
 		IDrawableElement element = null;
-		for(int ii = 0; ii < elements.size(); ii++) {
+		for(int ii = 0; ii < lists.size(); ii++) {
 			
-			currList = elements.get(ii);
+			currList = lists.get(ii);
 			elementLists[ii] = new JsonElementList(currList.size());
 			for(int jj = 0; jj < currList.size(); jj++) {
 				
