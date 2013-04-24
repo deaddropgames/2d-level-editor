@@ -36,7 +36,6 @@ public class LevelCanvas extends JPanel {
 	private Dimension canvasDim;
 	private BipedReference bipedRef;
 	private IDrawableElement lastHitElement;
-	private ArrayList<IDrawableElement> lastHitList;
 	private JsonLevel level;
 	private Line guideLine; // line drawn from last point to mouse-moved point when in drawing mode
 	
@@ -254,7 +253,6 @@ public class LevelCanvas extends JPanel {
 		elements.clear();
 		level = null;
 		lastHitElement = null;
-		lastHitList = null;
 	}
 	
 	public boolean loadLevelFromFile(final File levelFile) throws IOException {
@@ -325,7 +323,6 @@ public class LevelCanvas extends JPanel {
 	public boolean hitTest(final WorldPoint point) {
 
 		lastHitElement = null;
-		lastHitList = null;
 		
 		// convert the mouse point to its world point
 		for(ArrayList<IDrawableElement> list : elements) {
@@ -335,7 +332,6 @@ public class LevelCanvas extends JPanel {
 				if(element.hitTest(point.x, point.y)) {
 					
 					lastHitElement = element;
-					lastHitList = list;
 					return true;
 				}
 			}
@@ -351,14 +347,17 @@ public class LevelCanvas extends JPanel {
 	
 	public void updateNeighbors(final IDrawableElement element) {
 		
-		if(lastHitList == null) {
+		ArrayList<IDrawableElement> list = findListForElement(element);
+		if(list == null) {
 			
+			// shouldn't get here...
 			return;
 		}
 		
-		int index = lastHitList.indexOf(element);
+		int index = list.indexOf(element);
 		if(index == -1) {
 			
+			// shouldn't get here...
 			return;
 		}
 		
@@ -374,12 +373,12 @@ public class LevelCanvas extends JPanel {
 			// update the appropriate point on the neighbor
 			if(point != null) {
 				
-				setEndPoint(point, lastHitList.get(prev));
+				setEndPoint(point, list.get(prev));
 			}
 		}
 	
 		// update the next neighbor...
-		if(next < lastHitList.size()) {
+		if(next < list.size()) {
 			
 			// get the point that we need to update
 			WorldPoint point = getEndPoint(element);
@@ -387,7 +386,7 @@ public class LevelCanvas extends JPanel {
 			// update the appropriate point on the neighbor
 			if(point != null) {
 				
-				setStartPoint(point, lastHitList.get(next));
+				setStartPoint(point, list.get(next));
 			}
 		}
 	}
@@ -403,19 +402,21 @@ public class LevelCanvas extends JPanel {
 		}
 		
 		lastHitElement = null;
-		lastHitList = null;
 	}
 	
 	public void deleteElement(IDrawableElement element) {
 		
-		if(lastHitList == null) {
+		ArrayList<IDrawableElement> list = findListForElement(element);
+		if(list == null) {
 			
+			// shouldn't get here...
 			return;
 		}
 		
-		int index = lastHitList.indexOf(element);
+		int index = list.indexOf(element);
 		if(index == -1) {
 			
+			// shouldn't get here...
 			return;
 		}
 		
@@ -424,27 +425,26 @@ public class LevelCanvas extends JPanel {
 			
 			// if it just the start point, delete it
 			// otherwise do nothing, since we need the start point...
-			if(lastHitList.size() == 1) {
+			if(list.size() == 1) {
 				
-				lastHitList.clear();
-				elements.remove(lastHitList);
-				lastHitList = null;
+				list.clear();
+				elements.remove(list);
 			} else {
 				
-				lastHitList.remove(index);
+				list.remove(index);
 			}
 		} else {
 
-			boolean isLast = (index == (lastHitList.size() - 1));
+			boolean isLast = (index == (list.size() - 1));
 			
 			// if its the last element, remove it
 			if(isLast) {
 				
-				lastHitList.remove(index);
+				list.remove(index);
 			} else { // otherwise we need to update the next element
 				
-				setStartPoint(getStartPoint(element), lastHitList.get(index + 1));
-				lastHitList.remove(index);
+				setStartPoint(getStartPoint(element), list.get(index + 1));
+				list.remove(index);
 			}
 		}
 		
@@ -521,5 +521,18 @@ public class LevelCanvas extends JPanel {
 			((QuadraticBezierCurve)element).third.y = point.y;
 			((QuadraticBezierCurve)element).init();
 		}
+	}
+	
+	private ArrayList<IDrawableElement> findListForElement(IDrawableElement element) {
+		
+		for(ArrayList<IDrawableElement> list : elements) {
+			
+			if(list.indexOf(element) >= 0) {
+				
+				return list;
+			}
+		}
+		
+		return null;
 	}
 }
