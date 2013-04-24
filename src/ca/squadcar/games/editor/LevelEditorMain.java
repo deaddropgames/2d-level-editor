@@ -1099,7 +1099,6 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	public void mousePressed(MouseEvent evt) {
 
 		// if mouse is pressed and held in edit mode, we want to move the selected point, if any
-		// TODO: we could also possible translate the element with the mouse, if a point wasn't selected...
 		if(evt.getButton() == MouseEvent.BUTTON1) {
 			
 			if(!inDrawingMode) {
@@ -1145,7 +1144,22 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				// if we are starting a new drawable element
 				if(lastPoint == null) {
 					
-					currElemIsNew = true; // means we are starting a new chain of drawable elements
+					// if we clicked on a point, snap to it...
+					if(canvas.hitTest(point)) {
+						
+						IDrawableElement hitElement = canvas.getLastHitElement();
+						if(hitElement != null && hitElement.getSelectedPoint() != null) {
+							
+							point = hitElement.getSelectedPoint();
+							canvas.setCurrListForElement(hitElement);
+						}
+						
+						currElemIsNew = false;
+					} else {
+						
+						currElemIsNew = true; // means we are starting a new chain of drawable elements
+					}
+					
 					if(tglbtnAddLine.isSelected()) {
 						
 						lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
@@ -1171,7 +1185,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 							currCurve = new QuadraticBezierCurve(lastPoint, editorSettings.numCurveSegments);
 							currCurve.addPoint(point);
 							canvas.setTempDrawableElement(currCurve);
-							lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
+							lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+									getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
 						} else {
 							
 							currCurve.addPoint(point);
@@ -1181,10 +1196,12 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 								currElemIsNew = false;
 								currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
 								canvas.setTempDrawableElement(currCurve);
-								lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
+								lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+										getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
 							} else {
 							
-								lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
+								lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+										getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
 							}
 						}
 					}

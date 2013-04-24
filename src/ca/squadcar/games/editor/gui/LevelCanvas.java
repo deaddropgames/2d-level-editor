@@ -101,6 +101,11 @@ public class LevelCanvas extends JPanel {
 		currList.add(element);
 	}
 	
+	public void setCurrListForElement(final IDrawableElement element) {
+		
+		currList = findListForElement(element);
+	}
+	
 	public void setZoomFactor(final float zoomFactor) {
 		
 		this.zoomFactor = zoomFactor;
