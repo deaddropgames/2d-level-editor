@@ -1140,6 +1140,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				float zoomFactor = canvas.getZoomFactor();
 				WorldPoint point = new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor));
 				unsavedChanges = true;
+				canvas.selectNone();
 				
 				// if we are starting a new drawable element
 				if(lastPoint == null) {
@@ -1152,6 +1153,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 							
 							point = hitElement.getSelectedPoint();
 							canvas.setCurrListForElement(hitElement);
+							hitElement.setSelected(true); // visual aid to verify we connected to the element...
 						}
 						
 						currElemIsNew = false;
@@ -1249,6 +1251,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				
 				canvas.setTempDrawableElement(null);
 				canvas.setGuideLine(null);
+				canvas.cancelCurrList();
 				lastPoint = null;
 				canvas.repaint();
 			}

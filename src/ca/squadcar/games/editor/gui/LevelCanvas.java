@@ -106,6 +106,18 @@ public class LevelCanvas extends JPanel {
 		currList = findListForElement(element);
 	}
 	
+	/**
+	 * This gets called in cases where we just started adding an element, but cancelled it before it was done..
+	 */
+	public void cancelCurrList() {
+		
+		if(currList != null && currList.size() == 0) {
+			
+			elementLists.remove(currList);
+		}
+		currList = null;
+	}
+	
 	public void setZoomFactor(final float zoomFactor) {
 		
 		this.zoomFactor = zoomFactor;
@@ -185,20 +197,13 @@ public class LevelCanvas extends JPanel {
 				
 				// we add the first point, and then add mid and end points for each successive chain
 				if(isFirst) {
-					
-					if(ii == 0) {
-					
-						points.add(new WorldPoint(0.0f, 0.0f)); // assume very first point is always at the origin
-					} else {
 						
-						currPoint = new WorldPoint(getStartPoint(element));
-						currPoint.x -= transPoint.x;
-						currPoint.y -= transPoint.y;
-						currPoint.y *= -1.0f;
-						points.add(currPoint);
-					}
+					currPoint = new WorldPoint(getStartPoint(element));
+					currPoint.x -= transPoint.x;
+					currPoint.y -= transPoint.y;
+					currPoint.y *= -1.0f;
+					points.add(currPoint);
 					isFirst = false;
-					continue;
 				}
 				
 				if(element instanceof WorldPoint) {
