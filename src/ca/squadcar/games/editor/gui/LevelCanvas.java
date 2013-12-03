@@ -330,7 +330,7 @@ public class LevelCanvas extends JPanel {
 		bipedRef.setOffset(point);
 	}
 	
-	public boolean hitTest(final WorldPoint point) {
+	public boolean hitTest(final int x, final int y) {
 
 		lastHitElement = null;
 		
@@ -339,7 +339,7 @@ public class LevelCanvas extends JPanel {
 			
 			for(IDrawableElement element : list) {
 				
-				if(element.hitTest(point.x, point.y)) {
+				if(element.hitTest(x, y)) {
 					
 					lastHitElement = element;
 					return true;

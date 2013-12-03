@@ -34,10 +34,10 @@ public class Line implements IDrawableElement {
 	public void init() {
 		
 		// when a line is vertical or horizontal, we should expand the bounding box a bit
-		boundingBox = new Rectangle2D.Float(Math.min(start.x, end.x), 
-				Math.min(start.y, end.y), 
-				Math.abs(start.x - end.x), 
-				Math.abs(start.y - end.y));
+		boundingBox = new Rectangle2D.Float(Math.min(start.x, end.x) * zoomFactor, 
+				Math.min(start.y, end.y) * zoomFactor, 
+				Math.abs(start.x - end.x) * zoomFactor, 
+				Math.abs(start.y - end.y) * zoomFactor);
 		
 		start.init();
 		end.init();
@@ -71,15 +71,14 @@ public class Line implements IDrawableElement {
 		
 		end.draw(gfx, zoomFactor);
 		
-		/* for testing
-		if(boundingBox != null) {
-			
-			gfx.drawRect(Math.round(boundingBox.x * zoomFactor), 
-					Math.round(boundingBox.y * zoomFactor), 
-					Math.round(boundingBox.width * zoomFactor), 
-					Math.round(boundingBox.height * zoomFactor));
-		}
-		*/
+		// for testing
+//		if(boundingBox != null) {
+//			
+//			gfx.drawRect(Math.round(boundingBox.x), 
+//					Math.round(boundingBox.y), 
+//					Math.round(boundingBox.width), 
+//					Math.round(boundingBox.height));
+//		}
 		
 		gfx.setColor(temp);
 		
@@ -92,7 +91,7 @@ public class Line implements IDrawableElement {
 	}
 
 	@Override
-	public boolean hitTest(float x, float y) {
+	public boolean hitTest(final int x, final int y) {
 		
 		if(boundingBox == null) {
 			
@@ -112,14 +111,17 @@ public class Line implements IDrawableElement {
 		float distance = 1000.0f;
 		if(boundingBox.contains(x, y)) {
 			
+			float fX = x / zoomFactor;
+			float fY = y / zoomFactor;
+			
 			// edge cases...
 			// vertical line
 			if(Math.abs(start.x - end.x) < 0.001) {
 				
-				distance = Math.abs(start.x - x);
+				distance = Math.abs(start.x - fX);
 			} else if(Math.abs(start.y - end.y) < 0.001) { // horizontal line
 				
-				distance = Math.abs(start.y - y);
+				distance = Math.abs(start.y - fY);
 			} else { // do some math to figure it out...
 				
 				// get basic properties of the line
@@ -128,12 +130,12 @@ public class Line implements IDrawableElement {
 				float slopeSquared = slope * slope;
 				
 				// figure out where the lines cross
-				float y2 = (y * slopeSquared + x * slope + intercept) / (slopeSquared + 1);
+				float y2 = (fY * slopeSquared + fX * slope + intercept) / (slopeSquared + 1);
 				float x2 = (y2 - intercept) / slope;
 				
 				// compute the distance between the points
-				float deltaX = x2 - x;
-				float deltaY = y2 - y;
+				float deltaX = x2 - fX;
+				float deltaY = y2 - fY;
 				distance = (float)Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 			}
 		}

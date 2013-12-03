@@ -573,7 +573,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				WorldPoint point = new WorldPoint(evt.getPoint().x / zoomFactor, evt.getPoint().y / zoomFactor);
 				if(!inDrawingMode) {
 					
-					if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
+					if(canvas.hitTest(evt.getX(), evt.getY())) {
 						
 						canvas.setCursor(Cursor.HAND_CURSOR);
 					} else {
@@ -1113,8 +1113,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				canvas.selectNone();
 				btnDelete.setEnabled(false);
 				
-				float zoomFactor = canvas.getZoomFactor();
-				if(canvas.hitTest(new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor)))) {
+				if(canvas.hitTest(evt.getX(), evt.getY())) {
 					
 					IDrawableElement hitElement = canvas.getLastHitElement();
 					if(hitElement != null) {
@@ -1146,7 +1145,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				if(lastPoint == null) {
 					
 					// if we clicked on a point, snap to it...
-					if(canvas.hitTest(point)) {
+					if(canvas.hitTest(evt.getX(), evt.getY())) {
 						
 						IDrawableElement hitElement = canvas.getLastHitElement();
 						if(hitElement != null && hitElement.getSelectedPoint() != null) {

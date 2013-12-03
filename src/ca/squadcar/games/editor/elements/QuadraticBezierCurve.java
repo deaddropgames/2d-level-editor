@@ -3,6 +3,7 @@ package ca.squadcar.games.editor.elements;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.Rectangle2D.Float;
 import java.util.ArrayList;
 
 import ca.squadcar.games.editor.Globals;
@@ -19,6 +20,7 @@ public class QuadraticBezierCurve implements IDrawableElement {
 	private transient Rectangle2D.Float boundingBox;
 	private transient boolean selected;
 	private transient WorldPoint selectedPoint;
+	private transient float zoomFactor;
 	
 	public QuadraticBezierCurve(final WorldPoint firstPoint, final int numSegments) {
 		
@@ -27,6 +29,7 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		this.numSegments = numSegments;
 		this.selected = false;
 		this.selectedPoint = null;
+		this.zoomFactor = 0.0f;
 	}
 	
 	public QuadraticBezierCurve(final QuadraticBezierCurve curve) {
@@ -37,6 +40,7 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		this.numSegments = curve.numSegments;
 		this.lines = new ArrayList<Line>();
 		this.selected = false;
+		this.zoomFactor = 0.0f;
 		
 		// re-create the lines and bounding box...
 		init();
@@ -139,19 +143,42 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		}
 		
 		// initialize the bounding box
-		float minX = Math.min(Math.min(first.x, second.x), third.x);
-		float minY = Math.min(Math.min(first.y, second.y), third.y);
-		float maxX = Math.max(Math.max(first.x, second.x), third.x);
-		float maxY = Math.max(Math.max(first.y, second.y), third.y);
-		
-		this.boundingBox = new Rectangle2D.Float(minX, 
-				minY, 
-				Math.abs(maxX - minX), 
-				Math.abs(maxY - minY));
+		initBoundingBox();
 		
 		first.init();
 		second.init();
 		third.init();
+	}
+	
+	private void initBoundingBox() {
+		
+		boundingBox = null;
+		if(first != null && second != null && third != null) {
+		
+			float minX = Math.min(Math.min(first.x, second.x), third.x);
+			float minY = Math.min(Math.min(first.y, second.y), third.y);
+			float maxX = Math.max(Math.max(first.x, second.x), third.x);
+			float maxY = Math.max(Math.max(first.y, second.y), third.y);
+			boundingBox = new Rectangle2D.Float(minX * zoomFactor, 
+					minY * zoomFactor, 
+					Math.abs(maxX - minX) * zoomFactor, 
+					Math.abs(maxY - minY) * zoomFactor);
+			
+			if(first.boundingBox != null) {
+				
+				boundingBox = (Float)boundingBox.createUnion(first.boundingBox);
+			}
+			
+			if(second.boundingBox != null) {
+				
+				boundingBox = (Float)boundingBox.createUnion(second.boundingBox);
+			}
+			
+			if(third.boundingBox != null) {
+			
+				boundingBox = (Float)boundingBox.createUnion(third.boundingBox);
+			}
+		}
 	}
 	
 	public ArrayList<Line> getLines() {
@@ -192,15 +219,14 @@ public class QuadraticBezierCurve implements IDrawableElement {
 			third.draw(gfx, zoomFactor);
 		}
 		
-		/* for testing...
-		if(boundingBox != null) {
-			
-			gfx.drawRect(Math.round(boundingBox.x * zoomFactor), 
-					Math.round(boundingBox.y * zoomFactor), 
-					Math.round(boundingBox.width * zoomFactor), 
-					Math.round(boundingBox.height * zoomFactor));
-		}
-		*/
+		// for testing...
+//		if(boundingBox != null) {
+//			
+//			gfx.drawRect(Math.round(boundingBox.x), 
+//					Math.round(boundingBox.y), 
+//					Math.round(boundingBox.width), 
+//					Math.round(boundingBox.height));
+//		}
 		
 		// draw some helper lines for the curve
 		gfx.setColor(Color.LIGHT_GRAY);
@@ -221,10 +247,17 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		}
 		
 		gfx.setColor(temp);
+		
+		// if zoom factor has changed, update our bounding box
+		if(this.zoomFactor != zoomFactor) {
+		
+			this.zoomFactor = zoomFactor;
+			initBoundingBox();
+		}
 	}
 	
 	@Override
-	public boolean hitTest(float x, float y) {
+	public boolean hitTest(final int x, final int y) {
 		
 		if(pointsCount() != 3 || numSegments <= 0 || boundingBox == null) {
 			

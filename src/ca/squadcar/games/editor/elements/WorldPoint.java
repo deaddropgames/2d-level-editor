@@ -49,10 +49,10 @@ public class WorldPoint implements IDrawableElement {
 		
 		float size = Globals.POINT_SIZE / zoomFactor;
 		float halfSize = size / 2.0f;
-		this.boundingBox = new Rectangle2D.Float(x - halfSize, 
-				y - halfSize, 
-				size, 
-				size);
+		this.boundingBox = new Rectangle2D.Float((x - halfSize) * zoomFactor, 
+				(y - halfSize) * zoomFactor, 
+				size * zoomFactor, 
+				size * zoomFactor);
 	}
 
 	@Override
@@ -79,19 +79,18 @@ public class WorldPoint implements IDrawableElement {
 			init();
 		}
 		
-		/* to debug bounding boxes...
-		if(boundingBox != null) {
-			
-			gfx.drawRect(Math.round(boundingBox.x * zoomFactor), 
-					Math.round(boundingBox.y * zoomFactor), 
-					Math.round(boundingBox.width * zoomFactor), 
-					Math.round(boundingBox.height * zoomFactor));
-		}
-		*/
+		// to debug bounding boxes...
+//		if(boundingBox != null) {
+//			
+//			gfx.drawRect(Math.round(boundingBox.x), 
+//					Math.round(boundingBox.y), 
+//					Math.round(boundingBox.width), 
+//					Math.round(boundingBox.height));
+//		}
 	}
 
 	@Override
-	public boolean hitTest(float x, float y) {
+	public boolean hitTest(final int x, final int y) {
 		
 		if(boundingBox == null) {
 			

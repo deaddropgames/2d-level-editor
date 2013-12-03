@@ -8,7 +8,7 @@ public interface IDrawableElement {
 
 	public void draw(Graphics gfx, final float zoomFactor);
 	
-	public boolean hitTest(final float x, final float y);
+	public boolean hitTest(final int x, final int y);
 	
 	public PropertiesPanel getPropertiesPanel();
 	
