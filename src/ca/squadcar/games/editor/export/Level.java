@@ -8,6 +8,7 @@ public class Level {
 	public int revision;
 	public int difficulty;
 	public PolyLine[] polyLines;
+	public TreeExport[] trees;
 	
 	public Level() {
 		

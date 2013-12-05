@@ -14,10 +14,14 @@ import javax.swing.JOptionPane;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+
 import javax.swing.KeyStroke;
+
 import java.awt.event.KeyEvent;
 import java.awt.event.InputEvent;
+
 import javax.swing.JSeparator;
+
 import java.util.ResourceBundle;
 import java.awt.BorderLayout;
 
@@ -29,7 +33,9 @@ import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JToggleButton;
 import javax.swing.ScrollPaneConstants;
+
 import java.awt.GridLayout;
+
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -51,18 +57,21 @@ import javax.swing.JButton;
 import ca.squadcar.games.editor.elements.IDrawableElement;
 import ca.squadcar.games.editor.elements.Line;
 import ca.squadcar.games.editor.elements.QuadraticBezierCurve;
+import ca.squadcar.games.editor.elements.Tree;
 import ca.squadcar.games.editor.elements.WorldPoint;
 import ca.squadcar.games.editor.events.ElementChangedEvent;
 import ca.squadcar.games.editor.events.IElementChangedListener;
 import ca.squadcar.games.editor.gui.LevelCanvas;
 import ca.squadcar.games.editor.gui.LevelSaveDialog;
 import ca.squadcar.games.editor.gui.PropertiesPanel;
+import ca.squadcar.games.editor.gui.TreePanel;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
 import javax.swing.BoxLayout;
 
 public class LevelEditorMain implements IElementChangedListener, MouseListener {
@@ -80,6 +89,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 	private JToggleButton tglbtnSelect;
 	private JToggleButton tglbtnAddLine;
 	private JToggleButton tglbtnAddCurve;
+	private JToggleButton tglbtnAddTree;
 	private JButton btnDelete;
 	
 	private JScrollPane scrollPane;
@@ -663,10 +673,13 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		westToolBar.setFloatable(false);
 		
 		tglbtnSelect = new JToggleButton(new ImageIcon(LevelEditorMain.class.getResource("icons/cursor.png")));
-		
 		tglbtnSelect.setSelected(true);
 		tglbtnSelect.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.tglbtnSelect.toolTip"));
 		westToolBar.add(tglbtnSelect);
+		
+		JSeparator separator_7 = new JSeparator(SwingConstants.HORIZONTAL);
+		separator_7.setMaximumSize(new Dimension(separator.getMaximumSize().width, separator.getPreferredSize().height));
+		westToolBar.add(separator_7);
 		
 		tglbtnAddLine = new JToggleButton(new ImageIcon(LevelEditorMain.class.getResource("icons/chart_line_add.png")));
 		tglbtnAddLine.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.tglbtnAddLine.toolTip"));
@@ -675,6 +688,14 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		tglbtnAddCurve = new JToggleButton(new ImageIcon(LevelEditorMain.class.getResource("icons/chart_curve_add.png")));
 		tglbtnAddCurve.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.tglbtnAddCurve.toolTip"));
 		westToolBar.add(tglbtnAddCurve);
+		
+		tglbtnAddTree = new JToggleButton(new ImageIcon(LevelEditorMain.class.getResource("/ca/squadcar/games/editor/icons/picture_add.png")));
+		tglbtnAddTree.setToolTipText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.tglbtnAddTree.toolTipText")); //$NON-NLS-1$ //$NON-NLS-2$
+		westToolBar.add(tglbtnAddTree);
+		
+		JSeparator separator_8 = new JSeparator(SwingConstants.HORIZONTAL);
+		separator_8.setMaximumSize(new Dimension(separator.getMaximumSize().width, separator.getPreferredSize().height));
+		westToolBar.add(separator_8);
 		
 		btnDelete = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/delete.png")));
 		btnDelete.addActionListener(new ActionListener() {
@@ -729,6 +750,22 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				if(tglbtnAddCurve.isSelected()) {
 					
 					setCurveMode();
+				} else {
+					
+					// default to edit mode if deselected
+					setSelectMode();
+				}
+			}
+		});
+		
+		tglbtnAddTree.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent evt) {
+				
+				if(tglbtnAddTree.isSelected()) {
+					
+					setTreeMode();
 				} else {
 					
 					// default to edit mode if deselected
@@ -912,6 +949,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		tglbtnSelect.setSelected(true);
 		tglbtnAddLine.setSelected(false);
 		tglbtnAddCurve.setSelected(false);
+		tglbtnAddTree.setSelected(false);
 		canvas.setGuideLine(null);
 		lastPoint = null;
 		canvas.repaint();
@@ -928,6 +966,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		tglbtnAddLine.setSelected(true);
 		tglbtnSelect.setSelected(false);
 		tglbtnAddCurve.setSelected(false);
+		tglbtnAddTree.setSelected(false);
 		btnDelete.setEnabled(false);
 		
 		if(currElemPropsPanel != null) {
@@ -955,6 +994,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		tglbtnAddCurve.setSelected(true);
 		tglbtnSelect.setSelected(false);
 		tglbtnAddLine.setSelected(false);
+		tglbtnAddTree.setSelected(false);
 		btnDelete.setEnabled(false);
 		
 		if(currElemPropsPanel != null) {
@@ -970,6 +1010,28 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			
 			lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.addFirstPoint"));
 		}
+	}
+	
+	private void setTreeMode() {
+		
+		canvas.setCursor(Cursor.CROSSHAIR_CURSOR);
+		canvas.setTempDrawableElement(null);
+		canvas.selectNone();
+		currCurve = null;
+		inDrawingMode = true;
+		tglbtnAddTree.setSelected(true);
+		tglbtnAddCurve.setSelected(false);
+		tglbtnSelect.setSelected(false);
+		tglbtnAddLine.setSelected(false);
+		btnDelete.setEnabled(false);
+		
+		if(currElemPropsPanel != null) {
+			
+			propertiesPanel.remove(currElemPropsPanel);
+			frmSquadcarGamesLevel.validate();
+		}
+		
+		lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.addTree"));
 	}
 	
 	private void newLevel() {
@@ -1136,107 +1198,10 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		
 			if(inDrawingMode) {
 				
-				float zoomFactor = canvas.getZoomFactor();
-				WorldPoint point = new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor));
-				unsavedChanges = true;
-				canvas.selectNone();
-				
-				// if we are starting a new drawable element
-				if(lastPoint == null) {
-					
-					// if we clicked on a point, snap to it...
-					if(canvas.hitTest(evt.getX(), evt.getY())) {
-						
-						IDrawableElement hitElement = canvas.getLastHitElement();
-						if(hitElement != null && hitElement.getSelectedPoint() != null) {
-							
-							point = hitElement.getSelectedPoint();
-							canvas.setCurrListForElement(hitElement);
-							hitElement.setSelected(true); // visual aid to verify we connected to the element...
-						}
-						
-						currElemIsNew = false;
-					} else {
-						
-						currElemIsNew = true; // means we are starting a new chain of drawable elements
-					}
-					
-					if(tglbtnAddLine.isSelected()) {
-						
-						lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
-								getString("LevelEditorMain.lblLeftStatuslabel.lineMode"));
-					} else if(tglbtnAddCurve.isSelected()) {
-						
-						currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
-						canvas.setTempDrawableElement(currCurve);
-						lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
-								getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
-					}
-				} else { // we are continuing a drawable element
-					
-					if(tglbtnAddLine.isSelected()) {
-						
-						// assume the last point is the line start
-						canvas.addDrawableElement(new Line(lastPoint, point), currElemIsNew);
-						currElemIsNew = false;
-					} else if(tglbtnAddCurve.isSelected()) {
-						
-						if(currCurve == null) {
-							
-							currCurve = new QuadraticBezierCurve(lastPoint, editorSettings.numCurveSegments);
-							currCurve.addPoint(point);
-							canvas.setTempDrawableElement(currCurve);
-							lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
-									getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
-						} else {
-							
-							currCurve.addPoint(point);
-							if(currCurve.pointsCount() == 3) {
-								
-								canvas.addDrawableElement(new QuadraticBezierCurve(currCurve), currElemIsNew);
-								currElemIsNew = false;
-								currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
-								canvas.setTempDrawableElement(currCurve);
-								lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
-										getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
-							} else {
-							
-								lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
-										getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
-							}
-						}
-					}
-				}
-				
-				// save for later...
-				lastPoint = new WorldPoint(point);
-				
-				unsavedChanges = true;
+				onDrawingModeClick(evt);
 			} else {
 				
-				if(justDragged) {
-					
-					justDragged = false;
-					canvas.selectNone();
-					canvas.repaint();
-					return;
-				}
-				
-				// in edit mode
-				// show the options pane for this element - element would have been hit by previous call to mouse pressed
-				IDrawableElement hitElement = canvas.getLastHitElement();
-				if(hitElement != null) {
-					
-					hitElement.setSelected(true);
-					currElemPropsPanel = hitElement.getPropertiesPanel();
-					if(currElemPropsPanel != null) {
-						
-						propertiesPanel.add(currElemPropsPanel);
-						currElemPropsPanel.addElemChangedListener(this);
-					}
-					
-					btnDelete.setEnabled(true);
-				}
+				onSelectModeClick();
 			}
 			
 			frmSquadcarGamesLevel.validate();
@@ -1255,5 +1220,124 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 				canvas.repaint();
 			}
 		}
+	}
+	
+	private void onDrawingModeClick(MouseEvent evt) {
+		
+		float zoomFactor = canvas.getZoomFactor();
+		WorldPoint point = new WorldPoint((evt.getPoint().x / zoomFactor), (evt.getPoint().y / zoomFactor));
+		unsavedChanges = true;
+		canvas.selectNone();
+		
+		// trees are a special case...
+		if(tglbtnAddTree.isSelected()) {
+
+			canvas.addTree(new Tree(TreePanel.lastWidth, TreePanel.lastHeight, TreePanel.lastLevels, point));
+		} else { // else we are adding a multi-click element
+			
+			onMultiClickElement(evt, point);
+		}
+		
+		unsavedChanges = true;
+	}
+	
+	private void onSelectModeClick() {
+		
+		if(justDragged) {
+			
+			justDragged = false;
+			canvas.selectNone();
+			canvas.repaint();
+			return;
+		}
+		
+		// in edit mode
+		// show the options pane for this element - element would have been hit by previous call to mouse pressed
+		IDrawableElement hitElement = canvas.getLastHitElement();
+		if(hitElement != null) {
+			
+			hitElement.setSelected(true);
+			currElemPropsPanel = hitElement.getPropertiesPanel();
+			if(currElemPropsPanel != null) {
+				
+				propertiesPanel.add(currElemPropsPanel);
+				currElemPropsPanel.addElemChangedListener(this);
+			}
+			
+			btnDelete.setEnabled(true);
+		}
+	}
+	
+	private void onMultiClickElement(MouseEvent evt, WorldPoint point) {
+		
+		// if we are starting a new drawable element
+		if(lastPoint == null) {
+			
+			// if we clicked on a point, snap to it...
+			if(canvas.hitTest(evt.getX(), evt.getY())) {
+				
+				IDrawableElement hitElement = canvas.getLastHitElement();
+				if(hitElement != null && hitElement.getSelectedPoint() != null) {
+					
+					point = hitElement.getSelectedPoint();
+					canvas.setCurrListForElement(hitElement);
+					hitElement.setSelected(true); // visual aid to verify we connected to the element...
+				}
+				
+				currElemIsNew = false;
+			} else {
+				
+				currElemIsNew = true; // means we are starting a new chain of drawable elements
+			}
+			
+			if(tglbtnAddLine.isSelected()) {
+				
+				lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+						getString("LevelEditorMain.lblLeftStatuslabel.lineMode"));
+			} else if(tglbtnAddCurve.isSelected()) {
+				
+				currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
+				canvas.setTempDrawableElement(currCurve);
+				lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+						getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
+			}
+		} else { // we are continuing a drawable element
+			
+			if(tglbtnAddLine.isSelected()) {
+				
+				// assume the last point is the line start
+				canvas.addDrawableElement(new Line(lastPoint, point), currElemIsNew);
+				currElemIsNew = false;
+			} else if(tglbtnAddCurve.isSelected()) {
+				
+				if(currCurve == null) {
+					
+					currCurve = new QuadraticBezierCurve(lastPoint, editorSettings.numCurveSegments);
+					currCurve.addPoint(point);
+					canvas.setTempDrawableElement(currCurve);
+					lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+							getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
+				} else {
+					
+					currCurve.addPoint(point);
+					if(currCurve.pointsCount() == 3) {
+						
+						canvas.addDrawableElement(new QuadraticBezierCurve(currCurve), currElemIsNew);
+						currElemIsNew = false;
+						currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
+						canvas.setTempDrawableElement(currCurve);
+						lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+								getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
+					} else {
+					
+						lblLeftStatuslabel.setText(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").
+								getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
+					}
+				}
+			}
+		}
+	
+		// save for later
+		lastPoint = new WorldPoint(point);
 	}
 }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import ca.squadcar.games.editor.elements.IDrawableElement;
 import ca.squadcar.games.editor.elements.Line;
 import ca.squadcar.games.editor.elements.QuadraticBezierCurve;
+import ca.squadcar.games.editor.elements.Tree;
 import ca.squadcar.games.editor.elements.WorldPoint;
 
 public class JsonLevel {
@@ -62,6 +63,9 @@ public class JsonLevel {
 				} else if(element instanceof QuadraticBezierCurve) {
 
 					elementLists[ii].elements[jj] = new JsonElement((QuadraticBezierCurve)element);
+				} else if(element instanceof Tree) {
+					
+					elementLists[ii].elements[jj] = new JsonElement((Tree)element);
 				}
 			}
 		}

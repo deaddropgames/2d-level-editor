@@ -118,4 +118,14 @@ public class WorldPoint implements IDrawableElement {
 		
 		return this.selected ? this : null;
 	}
+	
+	public WorldPoint sub(final WorldPoint other) {
+		
+		return new WorldPoint(x - other.x, y - other.y);
+	}
+	
+	public float dot(final WorldPoint other) {
+		
+		return x * other.x + y * other.y;
+	}
 }

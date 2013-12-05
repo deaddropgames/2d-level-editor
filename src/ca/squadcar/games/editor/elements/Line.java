@@ -31,9 +31,9 @@ public class Line implements IDrawableElement {
 		init();
 	}
 	
+	@Override
 	public void init() {
-		
-		// when a line is vertical or horizontal, we should expand the bounding box a bit
+
 		boundingBox = new Rectangle2D.Float(Math.min(start.x, end.x) * zoomFactor, 
 				Math.min(start.y, end.y) * zoomFactor, 
 				Math.abs(start.x - end.x) * zoomFactor, 
@@ -50,6 +50,21 @@ public class Line implements IDrawableElement {
 		if(end.boundingBox != null) {
 		
 			boundingBox = (Float)boundingBox.createUnion(end.boundingBox);
+		}
+	}
+	
+	// sometimes the parent won't want to draw the end point circles...
+	public void childDraw(Graphics gfx, float zoomFactor) {
+		
+		gfx.drawLine(Math.round(start.x * zoomFactor), 
+				Math.round(start.y * zoomFactor), 
+				Math.round(end.x * zoomFactor), 
+				Math.round(end.y * zoomFactor));
+		
+		if(this.zoomFactor != zoomFactor) {
+			
+			this.zoomFactor = zoomFactor;
+			init();
 		}
 	}
 

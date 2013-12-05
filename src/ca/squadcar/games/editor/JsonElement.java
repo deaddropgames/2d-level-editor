@@ -3,6 +3,7 @@ package ca.squadcar.games.editor;
 import ca.squadcar.games.editor.elements.IDrawableElement;
 import ca.squadcar.games.editor.elements.Line;
 import ca.squadcar.games.editor.elements.QuadraticBezierCurve;
+import ca.squadcar.games.editor.elements.Tree;
 import ca.squadcar.games.editor.elements.WorldPoint;
 
 public class JsonElement {
@@ -11,10 +12,18 @@ public class JsonElement {
 	public static final short TypePoint = 1;
 	public static final short TypeLine = 2;
 	public static final short TypeCurve = 3;
+	public static final short TypeTree = 4;
 	
 	public short type;
 	public WorldPoint[] points;
-	public int numSegments; // this is really only needed for curves
+	
+	// bezier curve specific
+	public int numSegments;
+	
+	// tree specific
+	public float width;
+	public float height;
+	public int levels;
 	
 	public JsonElement() {
 		
@@ -48,6 +57,16 @@ public class JsonElement {
 		numSegments = curve.numSegments;
 	}
 	
+	public JsonElement(final Tree tree) {
+		
+		type = JsonElement.TypeTree;
+		points = new WorldPoint[1];
+		points[0] = new WorldPoint(tree.location);
+		width = tree.width;
+		height = tree.height;
+		levels = tree.levels;
+	}
+	
 	public IDrawableElement toDrawableElement() {
 		
 		IDrawableElement element = null;
@@ -76,6 +95,14 @@ public class JsonElement {
 					element = new QuadraticBezierCurve(points[0], numSegments);
 					((QuadraticBezierCurve)element).addPoint(points[1]);
 					((QuadraticBezierCurve)element).addPoint(points[2]);
+				}
+				break;
+			}
+			case JsonElement.TypeTree: {
+				
+				if(points != null && points.length == 1 && points[0] != null && width > 0.0f && height > 0.0f && levels >= 0) {
+					
+					element = new Tree(width, height, levels, points[0]);
 				}
 				break;
 			}

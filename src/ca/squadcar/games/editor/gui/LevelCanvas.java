@@ -11,8 +11,10 @@ import ca.squadcar.games.editor.elements.BipedReference;
 import ca.squadcar.games.editor.elements.IDrawableElement;
 import ca.squadcar.games.editor.elements.Line;
 import ca.squadcar.games.editor.elements.QuadraticBezierCurve;
+import ca.squadcar.games.editor.elements.Tree;
 import ca.squadcar.games.editor.elements.WorldPoint;
 import ca.squadcar.games.editor.export.Level;
+import ca.squadcar.games.editor.export.TreeExport;
 
 import com.google.gson.Gson;
 
@@ -31,6 +33,7 @@ public class LevelCanvas extends JPanel {
 
 	private ArrayList<ArrayList<IDrawableElement>> elementLists;
 	private ArrayList<IDrawableElement> currList;
+	private ArrayList<IDrawableElement> treeList;
 	private float zoomFactor;
 	private IDrawableElement temp;
 	private Dimension canvasDim;
@@ -54,6 +57,7 @@ public class LevelCanvas extends JPanel {
 		bipedRef = new BipedReference();
 		lastHitElement = null;
 		guideLine = null;
+		treeList = null;
 		
 		reset();
 	}
@@ -99,6 +103,16 @@ public class LevelCanvas extends JPanel {
 		}
 		
 		currList.add(element);
+	}
+	
+	public void addTree(final Tree tree) {
+		
+		if(treeList == null) {
+			
+			treeList = new ArrayList<IDrawableElement>();
+			elementLists.add(treeList);
+		}
+		treeList.add(tree);
 	}
 	
 	public void setCurrListForElement(final IDrawableElement element) {
@@ -181,7 +195,14 @@ public class LevelCanvas extends JPanel {
 		}
 	
 		Level level = new Level();
-		level.polyLines = new ca.squadcar.games.editor.export.PolyLine[elementLists.size()];
+		
+		int numPolylines = elementLists.size();
+		if(treeList != null) {
+			
+			numPolylines--;
+		}
+		
+		level.polyLines = new ca.squadcar.games.editor.export.PolyLine[numPolylines];
 		
 		// we need to translate all points relative to the first
 		IDrawableElement firstElem = elementLists.get(0).get(0);
@@ -189,6 +210,12 @@ public class LevelCanvas extends JPanel {
 		ArrayList<WorldPoint> points = new ArrayList<WorldPoint>();
 		WorldPoint currPoint;
 		for(int ii = 0; ii < elementLists.size(); ii++) {
+			
+			// we handle the trees last
+			if(elementLists.get(ii) == treeList) {
+				
+				continue;
+			}
 			
 			points.clear();
 			level.polyLines[ii] = new ca.squadcar.games.editor.export.PolyLine();
@@ -205,7 +232,7 @@ public class LevelCanvas extends JPanel {
 					points.add(currPoint);
 					isFirst = false;
 				}
-				
+
 				if(element instanceof WorldPoint) {
 					
 					currPoint = new WorldPoint((WorldPoint)element);
@@ -242,6 +269,28 @@ public class LevelCanvas extends JPanel {
 			
 			level.polyLines[ii].points = new WorldPoint[points.size()];
 			points.toArray(level.polyLines[ii].points);
+		}
+		
+		// add the trees
+		if(treeList != null && treeList.size() > 0) {
+			
+			ArrayList<TreeExport> trees = new ArrayList<TreeExport>();
+			for(IDrawableElement treeElem : treeList) {
+				
+				Tree elem = ((Tree)treeElem);
+				TreeExport tree = new TreeExport();
+				tree.height = elem.height;
+				tree.width = elem.width;
+				tree.levels = elem.levels;
+				tree.location = new WorldPoint(elem.location.x - transPoint.x, -(elem.location.y - transPoint.y));
+				trees.add(tree);
+			}
+			
+			level.trees = new TreeExport[trees.size()];
+			trees.toArray(level.trees);
+		} else {
+			
+			level.trees = new TreeExport[0];
 		}
 		
 		return level;
@@ -430,31 +479,43 @@ public class LevelCanvas extends JPanel {
 			return;
 		}
 		
-		// check if removing the first element
-		if(index == 0) {
+		// special handling for tree list...
+		if(treeList == list) {
 			
-			// if it just the start point, delete it
-			// otherwise do nothing, since we need the start point...
-			if(list.size() == 1) {
+			treeList.remove(index);
+			if(treeList.size() == 0) {
 				
-				list.clear();
-				elementLists.remove(list);
-			} else {
-				
-				list.remove(index);
+				elementLists.remove(treeList);
+				treeList = null;
 			}
 		} else {
-
-			boolean isLast = (index == (list.size() - 1));
-			
-			// if its the last element, remove it
-			if(isLast) {
+		
+			// check if removing the first element
+			if(index == 0) {
 				
-				list.remove(index);
-			} else { // otherwise we need to update the next element
+				// if it just the start point, delete it
+				// otherwise do nothing, since we need the start point...
+				if(list.size() == 1) {
+					
+					list.clear();
+					elementLists.remove(list);
+				} else {
+					
+					list.remove(index);
+				}
+			} else {
+	
+				boolean isLast = (index == (list.size() - 1));
 				
-				setStartPoint(getStartPoint(element), list.get(index + 1));
-				list.remove(index);
+				// if its the last element, remove it
+				if(isLast) {
+					
+					list.remove(index);
+				} else { // otherwise we need to update the next element
+					
+					setStartPoint(getStartPoint(element), list.get(index + 1));
+					list.remove(index);
+				}
 			}
 		}
 		

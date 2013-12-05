@@ -142,12 +142,12 @@ public class QuadraticBezierCurve implements IDrawableElement {
 			lines.add(new Line(point1, point2));
 		}
 		
-		// initialize the bounding box
-		initBoundingBox();
-		
 		first.init();
 		second.init();
 		third.init();
+		
+		// initialize the bounding box
+		initBoundingBox();
 	}
 	
 	private void initBoundingBox() {
@@ -183,7 +183,7 @@ public class QuadraticBezierCurve implements IDrawableElement {
 	
 	public ArrayList<Line> getLines() {
 		
-		return this.lines;
+		return lines;
 	}
 	
 	@Override
@@ -203,10 +203,7 @@ public class QuadraticBezierCurve implements IDrawableElement {
 		// draw the curve without the intermediate points
 		for(Line line : lines) {
 			
-			gfx.drawLine(Math.round(line.start.x * zoomFactor), 
-					Math.round(line.start.y * zoomFactor), 
-					Math.round(line.end.x * zoomFactor), 
-					Math.round(line.end.y * zoomFactor));
+			line.childDraw(gfx, zoomFactor);
 		}
 		
 		if(second != null) {
