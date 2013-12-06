@@ -48,7 +48,10 @@ public class Tree implements IDrawableElement {
 			float levelHeight = (height - trunkHeight) / (float)levels;
 			float startWidth = width * 0.5f;
 			float widthDec = (width - trunkWidth) / (float)levels * 0.65f;
-			triangles = new Triangle[levels];
+			if(triangles == null || triangles.length != levels) {
+			
+				triangles = new Triangle[levels];
+			}
 			for(int ii = 0; ii < triangles.length; ii++) {
 				
 				float lower = trunkHeight + ii * levelHeight;
@@ -63,6 +66,11 @@ public class Tree implements IDrawableElement {
 						new WorldPoint(location.x + 0.0f, location.y - upper));
 			}
 		}
+		
+		if(zoomFactor != 0.0f) {
+			
+			initBoundingBox();
+		}
 	}
 	
 	private void initBoundingBox() {
@@ -75,8 +83,11 @@ public class Tree implements IDrawableElement {
 		if(triangles != null) {
 			
 			for(int ii = 0; ii < triangles.length; ii++) {
+
+				if(triangles[ii].boundingBox != null) {
 				
-				boundingBox = (Float)boundingBox.createUnion(triangles[ii].boundingBox);
+					boundingBox = (Float)boundingBox.createUnion(triangles[ii].boundingBox);
+				}
 			}
 		}
 	}
@@ -169,6 +180,6 @@ public class Tree implements IDrawableElement {
 	@Override
 	public WorldPoint getSelectedPoint() {
 		
-		return null;
+		return location;
 	}
 }

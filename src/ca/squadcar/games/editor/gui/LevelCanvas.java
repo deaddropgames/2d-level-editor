@@ -312,6 +312,11 @@ public class LevelCanvas extends JPanel {
 		elementLists.clear();
 		level = null;
 		lastHitElement = null;
+		if(treeList != null) {
+			
+			treeList.clear();
+			treeList = null;
+		}
 	}
 	
 	public boolean loadLevelFromFile(final File levelFile) throws IOException {
@@ -353,7 +358,6 @@ public class LevelCanvas extends JPanel {
 		for(JsonElementList list : level.elementLists) {
 		
 			currList = new ArrayList<IDrawableElement>();
-			elementLists.add(currList);
 			for(JsonElement jsonElement : list.elements) {
 				
 				IDrawableElement element = jsonElement.toDrawableElement();
@@ -362,7 +366,20 @@ public class LevelCanvas extends JPanel {
 					return false;
 				}
 				
-				currList.add(element);
+				// special handling for trees...
+				if(element instanceof Tree) {
+					
+					addTree((Tree)element);
+				} else {
+				
+					currList.add(element);
+				}
+			}
+			
+			// only add non-empty lists
+			if(currList.size() > 0) {
+				
+				elementLists.add(currList);
 			}
 		}
 		

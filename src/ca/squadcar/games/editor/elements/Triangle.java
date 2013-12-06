@@ -24,6 +24,11 @@ public class Triangle implements IDrawableElement {
 
 	@Override
 	public void init() {
+		
+		if(zoomFactor != 0.0f) {
+			
+			initBoundingBox();
+		}
 	}
 	
 	private void initBoundingBox() {

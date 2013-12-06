@@ -334,6 +334,17 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		mntmBezierCurve.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, 0));
 		mnDraw.add(mntmBezierCurve);
 		
+		JMenuItem mntmTree = new JMenuItem(ResourceBundle.getBundle("ca.squadcar.games.editor.messages").getString("LevelEditorMain.mntmTree.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		mntmTree.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+				
+				setTreeMode();
+			}
+		});
+		mntmTree.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, 0));
+		mnDraw.add(mntmTree);
+		
 		JSeparator separator_6 = new JSeparator();
 		mnDraw.add(separator_6);
 		

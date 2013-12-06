@@ -1,0 +1,409 @@
+{
+  "name": "Rolling Trees",
+  "description": "A couple rollers then a gap over some trees.",
+  "author": "Tristen Georgiou",
+  "revision": 1,
+  "difficulty": 1,
+  "elementLists": [
+    {
+      "elements": [
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 1.0,
+              "y": 3.2
+            },
+            {
+              "x": 3.8,
+              "y": 4.1
+            },
+            {
+              "x": 6.0,
+              "y": 7.6
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 6.0,
+              "y": 7.6
+            },
+            {
+              "x": 9.8,
+              "y": 13.0
+            },
+            {
+              "x": 13.6,
+              "y": 13.2
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 13.6,
+              "y": 13.2
+            },
+            {
+              "x": 15.4,
+              "y": 13.2
+            },
+            {
+              "x": 17.2,
+              "y": 11.4
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 17.2,
+              "y": 11.4
+            },
+            {
+              "x": 18.3,
+              "y": 9.7
+            },
+            {
+              "x": 20.6,
+              "y": 10.2
+            }
+          ],
+          "numSegments": 5,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 20.6,
+              "y": 10.2
+            },
+            {
+              "x": 23.8,
+              "y": 11.1
+            },
+            {
+              "x": 27.0,
+              "y": 16.5
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 27.0,
+              "y": 16.5
+            },
+            {
+              "x": 30.7,
+              "y": 21.9
+            },
+            {
+              "x": 34.5,
+              "y": 23.3
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 34.5,
+              "y": 23.3
+            },
+            {
+              "x": 42.1,
+              "y": 26.1
+            },
+            {
+              "x": 44.6,
+              "y": 22.0
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 44.6,
+              "y": 22.0
+            },
+            {
+              "x": 45.5,
+              "y": 20.4
+            },
+            {
+              "x": 50.2,
+              "y": 23.8
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 50.2,
+              "y": 23.8
+            },
+            {
+              "x": 52.3,
+              "y": 25.3
+            },
+            {
+              "x": 59.7,
+              "y": 38.6
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 59.7,
+              "y": 38.6
+            },
+            {
+              "x": 64.3,
+              "y": 47.1
+            },
+            {
+              "x": 81.6,
+              "y": 47.1
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 81.6,
+              "y": 47.1
+            },
+            {
+              "x": 84.7,
+              "y": 47.1
+            },
+            {
+              "x": 86.6,
+              "y": 45.0
+            }
+          ],
+          "numSegments": 7,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 2,
+          "points": [
+            {
+              "x": 86.6,
+              "y": 45.0
+            },
+            {
+              "x": 87.5,
+              "y": 44.1
+            }
+          ],
+          "numSegments": 1,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 87.5,
+              "y": 44.1
+            },
+            {
+              "x": 91.0,
+              "y": 50.9
+            },
+            {
+              "x": 98.2,
+              "y": 52.5
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 98.2,
+              "y": 52.5
+            },
+            {
+              "x": 106.8,
+              "y": 53.6
+            },
+            {
+              "x": 110.5,
+              "y": 47.6
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 110.5,
+              "y": 47.6
+            },
+            {
+              "x": 117.2,
+              "y": 48.2
+            },
+            {
+              "x": 124.3,
+              "y": 54.7
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 124.3,
+              "y": 54.7
+            },
+            {
+              "x": 132.6,
+              "y": 61.8
+            },
+            {
+              "x": 152.0,
+              "y": 62.5
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        },
+        {
+          "type": 3,
+          "points": [
+            {
+              "x": 152.0,
+              "y": 62.5
+            },
+            {
+              "x": 172.4,
+              "y": 62.5
+            },
+            {
+              "x": 204.0,
+              "y": 22.4
+            }
+          ],
+          "numSegments": 10,
+          "width": 0.0,
+          "height": 0.0,
+          "levels": 0
+        }
+      ]
+    },
+    {
+      "elements": [
+        {
+          "type": 4,
+          "points": [
+            {
+              "x": 49.4,
+              "y": 23.0
+            }
+          ],
+          "numSegments": 0,
+          "width": 2.0,
+          "height": 7.0,
+          "levels": 5
+        },
+        {
+          "type": 4,
+          "points": [
+            {
+              "x": 93.1,
+              "y": 50.5
+            }
+          ],
+          "numSegments": 0,
+          "width": 3.5,
+          "height": 10.5,
+          "levels": 4
+        },
+        {
+          "type": 4,
+          "points": [
+            {
+              "x": 104.4,
+              "y": 52.3
+            }
+          ],
+          "numSegments": 0,
+          "width": 5.5,
+          "height": 16.0,
+          "levels": 6
+        }
+      ]
+    }
+  ]
+}
