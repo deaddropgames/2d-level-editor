@@ -13,6 +13,7 @@ public class Tree implements IDrawableElement {
 	
 	public float width;
 	public float height;
+	public float trunkHeight;
 	public int levels;
 	public WorldPoint location;
 	
@@ -22,10 +23,11 @@ public class Tree implements IDrawableElement {
 	private transient Rectangle2D.Float trunk;
 	private transient Triangle [] triangles;
 
-	public Tree(final float width, final float height, final int levels, final WorldPoint location) {
+	public Tree(final float width, final float height, final float trunkHeight, final int levels, final WorldPoint location) {
 		
 		this.width = width;
 		this.height = height;
+		this.trunkHeight = trunkHeight;
 		this.levels = levels;
 		this.location = new WorldPoint(location);
 		
@@ -36,7 +38,6 @@ public class Tree implements IDrawableElement {
 	public void init() {
 		
 		float trunkWidth = 0.3f * width;
-		float trunkHeight = 0.15f * height;
 		
 		trunk = new Rectangle2D.Float(location.x - trunkWidth * 0.5f,
 				location.y - trunkHeight,
@@ -45,7 +46,7 @@ public class Tree implements IDrawableElement {
 		
 		if(levels > 0) {
 
-			float levelHeight = (height - trunkHeight) / (float)levels;
+			float levelHeight = height / (float)levels;
 			float startWidth = width * 0.5f;
 			float widthDec = (width - trunkWidth) / (float)levels * 0.65f;
 			if(triangles == null || triangles.length != levels) {

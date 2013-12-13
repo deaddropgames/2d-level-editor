@@ -1,6 +1,6 @@
 {
     "canvasWidth": 500,
     "canvasHeight": 300,
-    "simJar": "./../skisimnew/bin/SkiSimDesktop.jar",
+    "simJar": "./../skisimnew/bin/StuntMountainDesktop.jar",
     "numCurveSegments": 10
 }

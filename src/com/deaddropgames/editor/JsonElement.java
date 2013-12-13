@@ -23,6 +23,7 @@ public class JsonElement {
 	// tree specific
 	public float width;
 	public float height;
+	public float trunkHeight;
 	public int levels;
 	
 	public JsonElement() {
@@ -64,6 +65,7 @@ public class JsonElement {
 		points[0] = new WorldPoint(tree.location);
 		width = tree.width;
 		height = tree.height;
+		trunkHeight = tree.trunkHeight;
 		levels = tree.levels;
 	}
 	
@@ -100,9 +102,10 @@ public class JsonElement {
 			}
 			case JsonElement.TypeTree: {
 				
-				if(points != null && points.length == 1 && points[0] != null && width > 0.0f && height > 0.0f && levels >= 0) {
+				if(points != null && points.length == 1 && points[0] != null && width > 0.0f && height > 0.0f && 
+						trunkHeight > 0.0f && levels >= 0) {
 					
-					element = new Tree(width, height, levels, points[0]);
+					element = new Tree(width, height, trunkHeight, levels, points[0]);
 				}
 				break;
 			}

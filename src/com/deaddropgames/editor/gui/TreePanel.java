@@ -22,11 +22,13 @@ public class TreePanel extends PropertiesPanel implements IElementChangedListene
 	
 	public static float lastWidth = 3.0f;
 	public static float lastHeight = 5.0f;
+	public static float lastTrunkHeight = 0.15f * lastHeight;
 	public static int lastLevels = 5;
 	
 	// ui members
 	private JSpinner widthSpinner;
 	private JSpinner heightSpinner;
+	private JSpinner trunkHeightSpinner;
 	private JSpinner levelsSpinner;
 
 	public TreePanel(final Tree tree) {
@@ -38,9 +40,9 @@ public class TreePanel extends PropertiesPanel implements IElementChangedListene
 		setBorder(new TitledBorder(null, bundle.getString("TreePanel.title"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] {0, 0};
-		gridBagLayout.rowHeights = new int[] {0, 0, 0, 0, 0};
+		gridBagLayout.rowHeights = new int[] {0, 0, 0, 0, 0, 0};
 		gridBagLayout.columnWeights = new double[]{0.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		setLayout(gridBagLayout);
 		
 		JLabel lblWidth = new JLabel(bundle.getString("TreePanel.width"));
@@ -50,7 +52,7 @@ public class TreePanel extends PropertiesPanel implements IElementChangedListene
 		gbc_lblWidth.gridy = 0;
 		add(lblWidth, gbc_lblWidth);
 		
-		widthSpinner = new JSpinner(new SpinnerNumberModel(tree.width, -Globals.SPINNER_EXTENT, Globals.SPINNER_EXTENT, Globals.SPINNER_INC));
+		widthSpinner = new JSpinner(new SpinnerNumberModel(tree.width, 0.5, Globals.SPINNER_EXTENT, Globals.SPINNER_INC));
 		widthSpinner.addChangeListener(this);
 		GridBagConstraints gbc_spinner = new GridBagConstraints();
 		gbc_spinner.insets = new Insets(0, 0, 5, 0);
@@ -65,7 +67,7 @@ public class TreePanel extends PropertiesPanel implements IElementChangedListene
 		gbc_lblHeight.gridy = 1;
 		add(lblHeight, gbc_lblHeight);
 		
-		heightSpinner = new JSpinner(new SpinnerNumberModel(tree.height, -Globals.SPINNER_EXTENT, Globals.SPINNER_EXTENT, Globals.SPINNER_INC));
+		heightSpinner = new JSpinner(new SpinnerNumberModel(tree.height, 1.0, Globals.SPINNER_EXTENT, Globals.SPINNER_INC));
 		heightSpinner.addChangeListener(this);
 		GridBagConstraints gbc_spinner_1 = new GridBagConstraints();
 		gbc_spinner_1.insets = new Insets(0, 0, 5, 0);
@@ -73,20 +75,35 @@ public class TreePanel extends PropertiesPanel implements IElementChangedListene
 		gbc_spinner_1.gridy = 1;
 		add(heightSpinner, gbc_spinner_1);
 		
-		JLabel lblLevels = new JLabel(bundle.getString("TreePanel.levels"));
-		GridBagConstraints gbc_lblLevels = new GridBagConstraints();
-		gbc_lblLevels.insets = new Insets(0, 0, 5, 5);
-		gbc_lblLevels.gridx = 0;
-		gbc_lblLevels.gridy = 2;
-		add(lblLevels, gbc_lblLevels);
+		JLabel lblTrunkHeight = new JLabel(bundle.getString("TreePanel.trunkHeight"));
+		GridBagConstraints gbc_lblTrunkHeight = new GridBagConstraints();
+		gbc_lblTrunkHeight.insets = new Insets(0, 0, 5, 5);
+		gbc_lblTrunkHeight.gridx = 0;
+		gbc_lblTrunkHeight.gridy = 2;
+		add(lblTrunkHeight, gbc_lblTrunkHeight);
 		
-		levelsSpinner = new JSpinner(new SpinnerNumberModel(tree.levels, 0, 1000, 1));
-		levelsSpinner.addChangeListener(this);
+		trunkHeightSpinner = new JSpinner(new SpinnerNumberModel(tree.trunkHeight, 0.1, Globals.SPINNER_EXTENT, 0.1));
+		trunkHeightSpinner.addChangeListener(this);
 		GridBagConstraints gbc_spinner_2 = new GridBagConstraints();
 		gbc_spinner_2.insets = new Insets(0, 0, 5, 0);
 		gbc_spinner_2.gridx = 1;
 		gbc_spinner_2.gridy = 2;
-		add(levelsSpinner, gbc_spinner_2);
+		add(trunkHeightSpinner, gbc_spinner_2);
+		
+		JLabel lblLevels = new JLabel(bundle.getString("TreePanel.levels"));
+		GridBagConstraints gbc_lblLevels = new GridBagConstraints();
+		gbc_lblLevels.insets = new Insets(0, 0, 5, 5);
+		gbc_lblLevels.gridx = 0;
+		gbc_lblLevels.gridy = 3;
+		add(lblLevels, gbc_lblLevels);
+		
+		levelsSpinner = new JSpinner(new SpinnerNumberModel(tree.levels, 1, 1000, 1));
+		levelsSpinner.addChangeListener(this);
+		GridBagConstraints gbc_spinner_3 = new GridBagConstraints();
+		gbc_spinner_3.insets = new Insets(0, 0, 5, 0);
+		gbc_spinner_3.gridx = 1;
+		gbc_spinner_3.gridy = 3;
+		add(levelsSpinner, gbc_spinner_3);
 		
 		WorldPointPanel firstPointPanel = new WorldPointPanel(tree.location, bundle.getString("TreePanel.location"));
 		firstPointPanel.addElemChangedListener(this);
@@ -94,7 +111,7 @@ public class TreePanel extends PropertiesPanel implements IElementChangedListene
 		gbc_firstPoint.fill = GridBagConstraints.BOTH;
 		gbc_firstPoint.insets = new Insets(0, 0, 5, 0);
 		gbc_firstPoint.gridx = 1;
-		gbc_firstPoint.gridy = 3;
+		gbc_firstPoint.gridy = 4;
 		add(firstPointPanel, gbc_firstPoint);
 	}
 
@@ -103,15 +120,18 @@ public class TreePanel extends PropertiesPanel implements IElementChangedListene
 
 		double height = (Double)heightSpinner.getValue();
 		double width = (Double)widthSpinner.getValue();
+		double trunkHeight = (Double)trunkHeightSpinner.getValue();
 		
 		((Tree)element).height = (float)height;
 		((Tree)element).width = (float)width;
+		((Tree)element).trunkHeight = (float)trunkHeight;
 		((Tree)element).levels = (Integer)levelsSpinner.getValue();
 		((Tree)element).init();
 		
 		// update the last values
 		TreePanel.lastHeight = (float)height;
 		TreePanel.lastWidth = (float)width;
+		TreePanel.lastTrunkHeight = (float)trunkHeight;
 		TreePanel.lastLevels = (Integer)levelsSpinner.getValue();
 		
 		fireElemChangedEvent();

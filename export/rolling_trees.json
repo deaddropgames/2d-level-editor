@@ -629,7 +629,8 @@
   "trees": [
     {
       "width": 2.0,
-      "height": 7.0,
+      "height": 5.95,
+      "trunkHeight": 1.05,
       "levels": 5,
       "location": {
         "x": 48.4,
@@ -638,7 +639,8 @@
     },
     {
       "width": 3.5,
-      "height": 10.5,
+      "height": 8.925,
+      "trunkHeight": 1.575,
       "levels": 4,
       "location": {
         "x": 92.1,
@@ -647,7 +649,8 @@
     },
     {
       "width": 5.5,
-      "height": 16.0,
+      "height": 13.6,
+      "trunkHeight": 2.4,
       "levels": 6,
       "location": {
         "x": 103.4,

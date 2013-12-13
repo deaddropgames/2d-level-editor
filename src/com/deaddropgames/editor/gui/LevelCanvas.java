@@ -279,6 +279,7 @@ public class LevelCanvas extends JPanel {
 				Tree elem = ((Tree)treeElem);
 				TreeExport tree = new TreeExport();
 				tree.height = elem.height;
+				tree.trunkHeight = elem.trunkHeight;
 				tree.width = elem.width;
 				tree.levels = elem.levels;
 				tree.location = new WorldPoint(elem.location.x - transPoint.x, -(elem.location.y - transPoint.y));

@@ -1242,7 +1242,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		// trees are a special case...
 		if(tglbtnAddTree.isSelected()) {
 
-			canvas.addTree(new Tree(TreePanel.lastWidth, TreePanel.lastHeight, TreePanel.lastLevels, point));
+			canvas.addTree(new Tree(TreePanel.lastWidth, TreePanel.lastHeight, TreePanel.lastTrunkHeight, TreePanel.lastLevels, point));
 		} else { // else we are adding a multi-click element
 			
 			onMultiClickElement(evt, point);
