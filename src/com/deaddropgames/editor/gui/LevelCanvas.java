@@ -539,6 +539,20 @@ public class LevelCanvas extends JPanel {
 		return;
 	}
 	
+	public void updateLevelMetaData(final JsonLevel level) {
+		
+		if(this.level == null) {
+			
+			this.level = new JsonLevel();
+		}
+		
+		this.level.author = level.author;
+		this.level.description = level.description;
+		this.level.difficulty = level.difficulty;
+		this.level.name = level.name;
+		this.level.revision = level.revision;
+	}
+	
 	private static WorldPoint getStartPoint(IDrawableElement element) {
 		
 		WorldPoint point = null;

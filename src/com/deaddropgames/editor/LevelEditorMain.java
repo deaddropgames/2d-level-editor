@@ -855,6 +855,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		}
 		
 		saveDlg.updateSaveLevel(level);
+		canvas.updateLevelMetaData(level);
 		
 		Gson json = new GsonBuilder().setPrettyPrinting().create();
 		try {
@@ -1061,8 +1062,6 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 			return;
 		}
 		
-		resetLevel();
-		
 		JFileChooser fc = new JFileChooser(new File(defaultLevelDir));
 		FileNameExtensionFilter filter = new FileNameExtensionFilter(
 				ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.levelFiles.fileType.text"), 
@@ -1071,6 +1070,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		int returnVal = fc.showOpenDialog(frmEditor);
 		if(returnVal == JFileChooser.APPROVE_OPTION) {
 
+			resetLevel();
 			File levelFile = fc.getSelectedFile();
 			try {
 				
@@ -1080,6 +1080,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 							ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.text"), 
 							ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.title"), 
 							JOptionPane.ERROR_MESSAGE);
+					return;
 				}
 			} catch (HeadlessException ex) {
 
