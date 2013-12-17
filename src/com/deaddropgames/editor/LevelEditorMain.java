@@ -887,6 +887,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 		// save it in original format first...
 		if(currFilename != null) {
 			
+			saveDlg.updateForMeta(false, defaultLevelDir, currFilename, canvas.getLevelForSave());
 			saveLevel(currFilename);
 		}
 		
