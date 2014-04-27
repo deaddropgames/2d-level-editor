@@ -4,8 +4,8 @@ import com.deaddropgames.editor.elements.WorldPoint;
 
 public class PolyLine {
 
-	public WorldPoint[] points;
-	
-	public PolyLine() {
-	}
+    public WorldPoint[] points;
+
+    public PolyLine() {
+    }
 }
