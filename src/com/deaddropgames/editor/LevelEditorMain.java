@@ -60,6 +60,7 @@ import com.deaddropgames.editor.gui.LevelCanvas;
 import com.deaddropgames.editor.gui.LevelSaveDialog;
 import com.deaddropgames.editor.gui.PropertiesPanel;
 import com.deaddropgames.editor.gui.TreePanel;
+import com.deaddropgames.editor.pickle.ExportLevel;
 import com.deaddropgames.editor.pickle.Utils;
 
 import java.awt.event.WindowAdapter;
@@ -818,7 +819,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
             return;
         }
 
-        saveDlg.updateSaveLevel(level);
+        saveDlg.updateLevel(level);
 
         try {
 
@@ -852,29 +853,22 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         }
 
         // NOTE: the export level class is different from those that can be saved
-        com.deaddropgames.editor.export.Level level = canvas.getLevelForExport();
+        ExportLevel level = canvas.getLevelForExport();
         if(level == null) {
 
             System.err.println("Level cannot be exported with no elements.");
             return;
         }
 
-        saveDlg.updateExportLevel(level);
+        saveDlg.updateLevel(level);
 
-        // we still consider their to be saved changes on an export...
-        // TODO
-        /*Gson json = new GsonBuilder().setPrettyPrinting().create();
         try {
 
-            String data = json.toJson(level);
-            BufferedWriter out = new BufferedWriter(new FileWriter(filename));
-            out.write(data);
-            out.close();
-            lblLeftStatuslabel.setText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.levelExported"));
+            Utils.getJsonizer().toJson(level, new FileWriter(filename));
         } catch (IOException e) {
 
             e.printStackTrace();
-        }*/
+        }
     }
 
     private void resetLevel() {

@@ -28,8 +28,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JTextArea;
 import javax.swing.SpinnerNumberModel;
 
-//import com.deaddropgames.editor.JsonLevel;
-import com.deaddropgames.editor.export.Level;
+import com.deaddropgames.editor.pickle.BaseLevel;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -257,22 +256,13 @@ public class LevelSaveDialog extends JDialog implements ActionListener, MouseLis
         }
     }
 
-    public void updateSaveLevel(com.deaddropgames.editor.pickle.Level level) {
+    public void updateLevel(BaseLevel level) {
 
         level.setName(txtTitletextfield.getText());
         level.setAuthor(txtAuthortextfield.getText());
         level.setRevision((Integer)spinnerRevision.getValue());
         level.setDifficulty(comboDifficulty.getSelectedIndex());
         level.setDescription(txtDescriptiontextarea.getText());
-    }
-
-    public void updateExportLevel(Level level) {
-
-        level.name = txtTitletextfield.getText();
-        level.author = txtAuthortextfield.getText();
-        level.revision = (Integer)spinnerRevision.getValue();
-        level.difficulty = comboDifficulty.getSelectedIndex();
-        level.description = txtDescriptiontextarea.getText();
     }
 
     public String getFilename() {

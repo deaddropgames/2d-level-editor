@@ -5,12 +5,10 @@ import java.awt.Graphics;
 import javax.swing.JPanel;
 
 import com.badlogic.gdx.utils.Array;
-import com.deaddropgames.editor.elements.BipedReference;
-import com.deaddropgames.editor.elements.IDrawableElement;
-import com.deaddropgames.editor.elements.Line;
-import com.deaddropgames.editor.elements.QuadraticBezierCurve;
-import com.deaddropgames.editor.elements.WorldPoint;
-import com.deaddropgames.editor.export.Level;
+import com.deaddropgames.editor.elements.*;
+import com.deaddropgames.editor.pickle.ExportLevel;
+import com.deaddropgames.editor.pickle.PolyLine;
+import com.deaddropgames.editor.pickle.Level;
 import com.deaddropgames.editor.pickle.Utils;
 
 import java.awt.Color;
@@ -30,7 +28,7 @@ public class LevelCanvas extends JPanel {
     private BipedReference bipedRef;
     private IDrawableElement lastHitElement;
     private Line guideLine; // line drawn from last point to mouse-moved point when in drawing mode
-    private com.deaddropgames.editor.pickle.Level pickleLevel;
+    private Level level;
 
     /**
      * Custom panel for drawing onto
@@ -46,7 +44,7 @@ public class LevelCanvas extends JPanel {
         bipedRef = new BipedReference();
         guideLine = null;
 
-        pickleLevel = new com.deaddropgames.editor.pickle.Level();
+        level = new Level();
         lastHitElement = null;
     }
 
@@ -56,7 +54,7 @@ public class LevelCanvas extends JPanel {
         super.paint(gfx);
 
         // draw the terrain
-        for(Object objList : pickleLevel.getTerrainGroups()) {
+        for(Object objList : level.getTerrainGroups()) {
 
             Array list = (Array)objList;
             for(Object objElem : list) {
@@ -67,7 +65,7 @@ public class LevelCanvas extends JPanel {
         }
 
         // draw the objects
-        for(Object obj : pickleLevel.getObjects()) {
+        for(Object obj : level.getObjects()) {
 
             IDrawableElement element = (IDrawableElement)obj;
             element.draw(gfx, zoomFactor);
@@ -104,13 +102,13 @@ public class LevelCanvas extends JPanel {
 
             if (currElemIsNew) {
 
-                pickleLevel.getTerrainGroups().add(currList);
+                level.getTerrainGroups().add(currList);
             }
 
             currList.add(element);
         } else {
 
-            pickleLevel.getObjects().add(element);
+            level.getObjects().add(element);
         }
     }
 
@@ -127,7 +125,7 @@ public class LevelCanvas extends JPanel {
 
         if(currList != null && currList.size == 0) {
 
-            pickleLevel.getTerrainGroups().removeValue(currList, true);
+            level.getTerrainGroups().removeValue(currList, true);
         }
         currList = null;
     }
@@ -184,71 +182,54 @@ public class LevelCanvas extends JPanel {
 
     public boolean hasElements() {
 
-        return pickleLevel.hasElements();
+        return level.hasElements();
     }
 
-    public Level getLevelForExport() {
+    public ExportLevel getLevelForExport() {
 
-        // TODO: need refactor when we get here...
-        /*if(elementLists.size() == 0) {
+        // make sure there is something to export...
+        if(!level.hasElements() || level.getTerrainGroups().size == 0) {
 
             return null;
         }
 
-        Level level = new Level();
+        ExportLevel exportLevel = new ExportLevel();
+        exportLevel.copyMetaData(level);
 
-        int numPolylines = elementLists.size();
-        if(treeList != null) {
-
-            numPolylines--;
-        }
-
-        level.polyLines = new com.deaddropgames.editor.export.PolyLine[numPolylines];
-
-        // we need to translate all points relative to the first
-        IDrawableElement firstElem = elementLists.get(0).get(0);
+        // all points are translated relative to the first upon save...
+        IDrawableElement firstElem = (IDrawableElement)((Array)level.getTerrainGroups().get(0)).get(0);
         WorldPoint transPoint = getStartPoint(firstElem);
-        ArrayList<WorldPoint> points = new ArrayList<WorldPoint>();
         WorldPoint currPoint;
-        for(int ii = 0; ii < elementLists.size(); ii++) {
 
-            // we handle the trees last
-            if(elementLists.get(ii) == treeList) {
+        // we will export the terrain first
+        for(Object objList : level.getTerrainGroups()) {
 
-                continue;
-            }
-
-            points.clear();
-            level.polyLines[ii] = new com.deaddropgames.editor.export.PolyLine();
+            Array list = (Array) objList;
+            PolyLine polyLine = new PolyLine();
             boolean isFirst = true;
-            for(IDrawableElement element : elementLists.get(ii)) {
+            for(Object objElem : list) {
 
                 // we add the first point, and then add mid and end points for each successive chain
+                IDrawableElement element = (IDrawableElement)objElem;
                 if(isFirst) {
 
                     currPoint = new WorldPoint(getStartPoint(element));
                     currPoint.x -= transPoint.x;
                     currPoint.y -= transPoint.y;
                     currPoint.y *= -1.0f;
-                    points.add(currPoint);
+                    polyLine.getPoints().add(currPoint);
                     isFirst = false;
                 }
 
-                if(element instanceof WorldPoint) {
-
-                    currPoint = new WorldPoint((WorldPoint)element);
-                    currPoint.x -= transPoint.x;
-                    currPoint.y -= transPoint.y;
-                    currPoint.y *= -1.0f;
-                    points.add(currPoint);
-                } else if(element instanceof Line) {
+                // we only export lines and curves as terrain
+                if(element instanceof Line) {
 
                     Line line = (Line)element;
                     currPoint = new WorldPoint(line.end);
                     currPoint.x -= transPoint.x;
                     currPoint.y -= transPoint.y;
                     currPoint.y *= -1.0f;
-                    points.add(new WorldPoint(currPoint));
+                    polyLine.getPoints().add(new WorldPoint(currPoint));
                 } else if(element instanceof QuadraticBezierCurve) {
 
                     QuadraticBezierCurve curve = (QuadraticBezierCurve)element;
@@ -258,64 +239,49 @@ public class LevelCanvas extends JPanel {
                         currPoint.x -= transPoint.x;
                         currPoint.y -= transPoint.y;
                         currPoint.y *= -1.0f;
-                        points.add(new WorldPoint(currPoint));
+                        polyLine.getPoints().add(new WorldPoint(currPoint));
                     }
                 }
             }
 
-            if(points.size() <= 1) {
+            // store the completed polyline - it must have at least 2 points to be valid...
+            if(polyLine.getPoints().size() > 1) {
 
-                continue;
+                exportLevel.getPolyLines().add(polyLine);
             }
-
-            level.polyLines[ii].points = new WorldPoint[points.size()];
-            points.toArray(level.polyLines[ii].points);
         }
 
-        // add the trees
-        if(treeList != null && treeList.size() > 0) {
+        // now let's export the objects (currently this is just trees...)
+        for(Object obj : level.getObjects()) {
 
-            ArrayList<TreeExport> trees = new ArrayList<TreeExport>();
-            for(IDrawableElement treeElem : treeList) {
+            IDrawableElement element = (IDrawableElement) obj;
+            if(element instanceof Tree) {
 
-                Tree elem = ((Tree)treeElem);
-                TreeExport tree = new TreeExport();
-                tree.height = elem.height;
-                tree.trunkHeight = elem.trunkHeight;
-                tree.width = elem.width;
-                tree.levels = elem.levels;
-                tree.location = new WorldPoint(elem.location.x - transPoint.x, -(elem.location.y - transPoint.y));
-                trees.add(tree);
+                // add the tree, but don't forget to translate it relative to the first point...
+                Tree tree = (Tree)element;
+                tree.location = new WorldPoint(tree.location.x - transPoint.x, -(tree.location.y - transPoint.y));
+                exportLevel.getTrees().add(tree);
             }
-
-            level.trees = new TreeExport[trees.size()];
-            trees.toArray(level.trees);
-        } else {
-
-            level.trees = new TreeExport[0];
         }
 
-        return level;
-        */
-        return null;
+        return exportLevel;
     }
 
-    public com.deaddropgames.editor.pickle.Level getLevel() {
+    public Level getLevel() {
 
-        return pickleLevel;
+        return level;
     }
 
     public void reset() {
 
-        pickleLevel = new com.deaddropgames.editor.pickle.Level();
+        level = new Level();
         lastHitElement = null;
     }
 
     public boolean loadLevelFromFile(final File levelFile) throws IOException {
 
-        pickleLevel = Utils.getJsonizer().fromJson(com.deaddropgames.editor.pickle.Level.class,
-                new FileReader(levelFile));
-        pickleLevel.init();
+        level = Utils.getJsonizer().fromJson(Level.class, new FileReader(levelFile));
+        level.init();
 
         return true;
     }
@@ -330,7 +296,7 @@ public class LevelCanvas extends JPanel {
         lastHitElement = null;
 
         // check if terrain was hit...
-        for(Object objList : pickleLevel.getTerrainGroups()) {
+        for(Object objList : level.getTerrainGroups()) {
 
             Array list = (Array)objList;
             for(Object objElem : list) {
@@ -345,7 +311,7 @@ public class LevelCanvas extends JPanel {
         }
 
         // if not terrain, check if an object was hit...
-        for(Object obj : pickleLevel.getObjects()) {
+        for(Object obj : level.getObjects()) {
 
             IDrawableElement element = (IDrawableElement)obj;
             if(element.hitTest(x, y)) {
@@ -412,7 +378,7 @@ public class LevelCanvas extends JPanel {
 
     public void selectNone() {
 
-        for(Object objList : pickleLevel.getTerrainGroups()) {
+        for(Object objList : level.getTerrainGroups()) {
 
             Array list = (Array)objList;
             for(Object objElem : list) {
@@ -422,7 +388,7 @@ public class LevelCanvas extends JPanel {
             }
         }
 
-        for(Object obj : pickleLevel.getObjects()) {
+        for(Object obj : level.getObjects()) {
 
             IDrawableElement element = (IDrawableElement)obj;
             element.setSelected(false);
@@ -449,9 +415,9 @@ public class LevelCanvas extends JPanel {
         }
 
         // special handling for objects...
-        if(pickleLevel.getObjects() == list) {
+        if(level.getObjects() == list) {
 
-            pickleLevel.getObjects().removeIndex(index);
+            level.getObjects().removeIndex(index);
         } else {
 
             // check if removing the first element
@@ -462,7 +428,7 @@ public class LevelCanvas extends JPanel {
                 if(list.size == 1) {
 
                     list.clear();
-                    pickleLevel.getTerrainGroups().removeValue(list, true);
+                    level.getTerrainGroups().removeValue(list, true);
                 } else {
 
                     list.removeIndex(index);
@@ -559,7 +525,7 @@ public class LevelCanvas extends JPanel {
     @SuppressWarnings("unchecked")
     private Array findListForElement(IDrawableElement element) {
 
-        for(Object objList : pickleLevel.getTerrainGroups()) {
+        for(Object objList : level.getTerrainGroups()) {
 
             Array list = (Array)objList;
             if(list.indexOf(element, true) >= 0) {
@@ -568,9 +534,9 @@ public class LevelCanvas extends JPanel {
             }
         }
 
-        if(pickleLevel.getObjects().indexOf(element, true) >= 0) {
+        if(level.getObjects().indexOf(element, true) >= 0) {
 
-            return pickleLevel.getObjects();
+            return level.getObjects();
         }
 
         return null;
