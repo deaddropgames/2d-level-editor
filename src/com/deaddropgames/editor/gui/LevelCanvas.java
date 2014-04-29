@@ -83,6 +83,14 @@ public class LevelCanvas extends JPanel {
 
             guideLine.draw(gfx, zoomFactor);
         }
+
+        if(level.getEndX() > 0f) {
+
+            int endX = Math.round(level.getEndX() * zoomFactor);
+            int yMax = (int)Math.round(canvasDim.getHeight() * zoomFactor);
+            gfx.setColor(Color.red);
+            gfx.drawLine(endX, 0, endX, yMax);
+        }
     }
 
     public void setCursor(int cursor) {
@@ -448,6 +456,11 @@ public class LevelCanvas extends JPanel {
                 }
             }
         }
+    }
+
+    public void addEnd(float endX) {
+
+        level.setEndX(endX);
     }
 
     private static WorldPoint getStartPoint(IDrawableElement element) {

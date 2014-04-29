@@ -108,6 +108,9 @@ public class Tree implements IDrawableElement {
         if(selected) {
 
             gfx.setColor(Globals.SELECTED_COLOR);
+        } else {
+
+            gfx.setColor(new Color(0.361f, 0.122f, 0.118f));
         }
 
         // draw trunk
@@ -115,6 +118,11 @@ public class Tree implements IDrawableElement {
                 Math.round(trunk.y * zoomFactor),
                 Math.round(trunk.width * zoomFactor),
                 Math.round(trunk.height * zoomFactor));
+
+        if(!selected) {
+
+            gfx.setColor(new Color(0.133f, 0.424f, 0.008f));
+        }
 
         // draw triangles
         if(triangles != null) {

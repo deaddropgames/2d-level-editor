@@ -23,6 +23,8 @@ import java.awt.event.InputEvent;
 import javax.swing.JSeparator;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.awt.BorderLayout;
 
@@ -75,6 +77,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
     final private String defaultExportDir = "export/";
     final private String editorConfigFilename = "conf/editor.json";
 
+    final private ResourceBundle rb = ResourceBundle.getBundle("com.deaddropgames.editor.messages");
+
     private JFrame frmEditor;
     private JLabel lblLeftStatuslabel;
     private JLabel lblRightStatuslabel;
@@ -84,7 +88,9 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
     private JToggleButton tglbtnAddLine;
     private JToggleButton tglbtnAddCurve;
     private JToggleButton tglbtnAddTree;
+    private JToggleButton tglbtnAddEnd;
     private JButton btnDelete;
+    private List<JToggleButton> toggleBtns;
 
     private JScrollPane scrollPane;
     private JPanel propertiesPanel;
@@ -153,6 +159,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
      * Initialize the contents of the frame.
      */
     private void initialize() {
+
         frmEditor = new JFrame();
         frmEditor.addWindowListener(new WindowAdapter() {
 
@@ -166,20 +173,17 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
                 System.exit(0);
             }
         });
-        frmEditor.setTitle(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.frmEditor.title")); //$NON-NLS-1$ //$NON-NLS-2$
+        frmEditor.setTitle(rb.getString("LevelEditorMain.frmEditor.title"));
         frmEditor.setBounds(100, 100, 800, 600);
         frmEditor.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
         JMenuBar menuBar = new JMenuBar();
         frmEditor.setJMenuBar(menuBar);
 
-        JMenu mnFile = new JMenu(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mnFile.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenu mnFile = new JMenu(rb.getString("LevelEditorMain.mnFile.text"));
         menuBar.add(mnFile);
 
-        JMenuItem mntmQuit = new JMenuItem(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mntmQuit.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenuItem mntmQuit = new JMenuItem(rb.getString("LevelEditorMain.mntmQuit.text"));
         mntmQuit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
         mntmQuit.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
@@ -192,8 +196,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
             }
         });
 
-        JMenuItem mntmNew = new JMenuItem(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mntmNew.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenuItem mntmNew = new JMenuItem(rb.getString("LevelEditorMain.mntmNew.text"));
         mntmNew.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
 
@@ -202,8 +205,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         });
         mnFile.add(mntmNew);
 
-        JMenuItem mntmOpen = new JMenuItem(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mntmOpen.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenuItem mntmOpen = new JMenuItem(rb.getString("LevelEditorMain.mntmOpen.text"));
         mntmOpen.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
 
@@ -215,8 +217,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         JSeparator separator_1 = new JSeparator();
         mnFile.add(separator_1);
 
-        JMenuItem mntmSave = new JMenuItem(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mntmSave.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenuItem mntmSave = new JMenuItem(rb.getString("LevelEditorMain.mntmSave.text"));
         mntmSave.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
 
@@ -226,8 +227,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
         mnFile.add(mntmSave);
 
-        JMenuItem mntmSaveAs = new JMenuItem(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mntmSaveAs.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenuItem mntmSaveAs = new JMenuItem(rb.getString("LevelEditorMain.mntmSaveAs.text"));
         mntmSaveAs.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
 
@@ -239,8 +239,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         JSeparator separator = new JSeparator();
         mnFile.add(separator);
 
-        JMenuItem mntmExport = new JMenuItem(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mntmExport.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenuItem mntmExport = new JMenuItem(rb.getString("LevelEditorMain.mntmExport.text"));
         mntmExport.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent arg0) {
@@ -257,12 +256,10 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         mnFile.add(separator_2);
         mnFile.add(mntmQuit);
 
-        JMenu mnDraw = new JMenu(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mnDraw.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenu mnDraw = new JMenu(rb.getString("LevelEditorMain.mnDraw.text"));
         menuBar.add(mnDraw);
 
-        JMenuItem mntmEdit = new JMenuItem(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mntmSelect.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenuItem mntmEdit = new JMenuItem(rb.getString("LevelEditorMain.mntmSelect.text"));
         mntmEdit.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent arg0) {
@@ -276,8 +273,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         JSeparator separator_5 = new JSeparator();
         mnDraw.add(separator_5);
 
-        JMenuItem mntmLine = new JMenuItem(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mntmLine.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenuItem mntmLine = new JMenuItem(rb.getString("LevelEditorMain.mntmLine.text"));
         mntmLine.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
@@ -288,8 +284,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         mntmLine.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, 0));
         mnDraw.add(mntmLine);
 
-        JMenuItem mntmBezierCurve = new JMenuItem(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mntmBezierCurve.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenuItem mntmBezierCurve = new JMenuItem(rb.getString("LevelEditorMain.mntmBezierCurve.text"));
         mntmBezierCurve.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
@@ -300,7 +295,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         mntmBezierCurve.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, 0));
         mnDraw.add(mntmBezierCurve);
 
-        JMenuItem mntmTree = new JMenuItem(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.mntmTree.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenuItem mntmTree = new JMenuItem(rb.getString("LevelEditorMain.mntmTree.text"));
         mntmTree.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
@@ -311,11 +306,21 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         mntmTree.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, 0));
         mnDraw.add(mntmTree);
 
+        JMenuItem mntmEnd = new JMenuItem(rb.getString("LevelEditorMain.mntmEnd.text"));
+        mntmEnd.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+
+                setEndMode();
+            }
+        });
+        mntmEnd.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0));
+        mnDraw.add(mntmEnd);
+
         JSeparator separator_6 = new JSeparator();
         mnDraw.add(separator_6);
 
-        JMenuItem mntmDeleteSelected = new JMenuItem(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mntmDeleteSelected.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenuItem mntmDeleteSelected = new JMenuItem(rb.getString("LevelEditorMain.mntmDeleteSelected.text"));
         mntmDeleteSelected.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
@@ -326,17 +331,16 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         mntmDeleteSelected.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
         mnDraw.add(mntmDeleteSelected);
 
-        JMenu mnHelp = new JMenu(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mnHelp.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenu mnHelp = new JMenu(rb.
+                getString("LevelEditorMain.mnHelp.text"));
         menuBar.add(mnHelp);
 
-        JMenuItem mntmAbout = new JMenuItem(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.mntmAbout.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        JMenuItem mntmAbout = new JMenuItem(rb.getString("LevelEditorMain.mntmAbout.text"));
         mntmAbout.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 JOptionPane.showMessageDialog(frmEditor,
-                        ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.aboutDlg.text"),
-                        ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.aboutDlg.title"),
+                        rb.getString("LevelEditorMain.aboutDlg.text"),
+                        rb.getString("LevelEditorMain.aboutDlg.title"),
                         JOptionPane.INFORMATION_MESSAGE);
             }
         });
@@ -348,7 +352,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         frmEditor.getContentPane().add(toolBar, BorderLayout.NORTH);
 
         JButton btnZoomIn = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/zoom_in.png")));
-        btnZoomIn.setToolTipText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.btnZoomIn.toolTip"));
+        btnZoomIn.setToolTipText(rb.getString("LevelEditorMain.btnZoomIn.toolTip"));
         btnZoomIn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
 
@@ -380,7 +384,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
                 newLevel();
             }
         });
-        btnNew.setToolTipText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.btnNew.toolTip"));
+        btnNew.setToolTipText(rb.getString("LevelEditorMain.btnNew.toolTip"));
         toolBar.add(btnNew);
 
         JButton btnOpen = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/folder_page.png")));
@@ -390,7 +394,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
                 openLevel();
             }
         });
-        btnOpen.setToolTipText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.btnOpen.toolTip"));
+        btnOpen.setToolTipText(rb.getString("LevelEditorMain.btnOpen.toolTip"));
         toolBar.add(btnOpen);
 
         JButton btnSave = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/disk.png")));
@@ -400,7 +404,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
                 saveLevel();
             }
         });
-        btnSave.setToolTipText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.btnSave.toolTip"));
+        btnSave.setToolTipText(rb.getString("LevelEditorMain.btnSave.toolTip"));
         toolBar.add(btnSave);
 
         JButton btnSaveAs = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/page_save.png")));
@@ -410,7 +414,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
                 saveLevelAs();
             }
         });
-        btnSaveAs.setToolTipText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.btnSaveAs.toolTip"));
+        btnSaveAs.setToolTipText(rb.getString("LevelEditorMain.btnSaveAs.toolTip"));
         toolBar.add(btnSaveAs);
 
         JButton btnExport = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/page_lightning.png")));
@@ -424,7 +428,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
                 }
             }
         });
-        btnExport.setToolTipText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.btnExport.toolTip"));
+        btnExport.setToolTipText(rb.getString("LevelEditorMain.btnExport.toolTip"));
         toolBar.add(btnExport);
 
         JSeparator separator_4 = new JSeparator();
@@ -434,7 +438,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         toolBar.add(btnZoomIn);
 
         JButton btnZoomOut = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/zoom_out.png")));
-        btnZoomOut.setToolTipText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.btnZoomOut.toolTip"));
+        btnZoomOut.setToolTipText(rb.getString("LevelEditorMain.btnZoomOut.toolTip"));
         btnZoomOut.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
 
@@ -472,15 +476,15 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 
         JButton btnTestLevel = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/application_go.png")));
         btnTestLevel.setHorizontalAlignment(SwingConstants.LEFT);
-        btnTestLevel.setToolTipText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.btnTestLevel.toolTip"));
+        btnTestLevel.setToolTipText(rb.getString("LevelEditorMain.btnTestLevel.toolTip"));
         btnTestLevel.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
 
                 if(!canvas.hasElements()) {
 
                     JOptionPane.showMessageDialog(frmEditor,
-                            ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.fileChooser.nothingToSave.text"),
-                            ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.fileChooser.nothingToSave.title"),
+                            rb.getString("LevelEditorMain.fileChooser.nothingToSave.text"),
+                            rb.getString("LevelEditorMain.fileChooser.nothingToSave.title"),
                             JOptionPane.WARNING_MESSAGE);
                     return;
                 }
@@ -488,8 +492,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
                 if(editorSettings.simJar == null || editorSettings.simJar.isEmpty()) {
 
                     JOptionPane.showMessageDialog(frmEditor,
-                            ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.btnTestLevel.emptySimJar.text"),
-                            ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.btnTestLevel.emptySimJar.title"),
+                            rb.getString("LevelEditorMain.btnTestLevel.emptySimJar.text"),
+                            rb.getString("LevelEditorMain.btnTestLevel.emptySimJar.title"),
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
@@ -498,11 +502,9 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
                 if(!simJar.exists()) {
 
                     JOptionPane.showMessageDialog(frmEditor,
-                            String.format(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                                getString("LevelEditorMain.btnTestLevel.simJarNotExists.text"),
+                            String.format(rb.getString("LevelEditorMain.btnTestLevel.simJarNotExists.text"),
                                     editorSettings.simJar),
-                            ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                                getString("LevelEditorMain.btnTestLevel.simJarNotExists.title"),
+                            rb.getString("LevelEditorMain.btnTestLevel.simJarNotExists.title"),
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
@@ -539,12 +541,10 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         frmEditor.getContentPane().add(statusPanel, BorderLayout.SOUTH);
         statusPanel.setLayout(new GridLayout(1, 2, 0, 0));
 
-        lblLeftStatuslabel = new JLabel(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.lblLeftStatuslabel.text")); //$NON-NLS-1$ //$NON-NLS-2$
+        lblLeftStatuslabel = new JLabel(rb.getString("LevelEditorMain.lblLeftStatuslabel.text"));
         statusPanel.add(lblLeftStatuslabel);
 
-        lblRightStatuslabel = new JLabel(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                getString("LevelEditorMain.lblRightStatuslabel.text"));
+        lblRightStatuslabel = new JLabel(rb.getString("LevelEditorMain.lblRightStatuslabel.text"));
         lblRightStatuslabel.setHorizontalAlignment(SwingConstants.RIGHT);
         statusPanel.add(lblRightStatuslabel);
 
@@ -650,7 +650,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 
         tglbtnSelect = new JToggleButton(new ImageIcon(LevelEditorMain.class.getResource("icons/cursor.png")));
         tglbtnSelect.setSelected(true);
-        tglbtnSelect.setToolTipText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.tglbtnSelect.toolTip"));
+        tglbtnSelect.setToolTipText(rb.getString("LevelEditorMain.tglbtnSelect.toolTip"));
         westToolBar.add(tglbtnSelect);
 
         JSeparator separator_7 = new JSeparator(SwingConstants.HORIZONTAL);
@@ -658,16 +658,22 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         westToolBar.add(separator_7);
 
         tglbtnAddLine = new JToggleButton(new ImageIcon(LevelEditorMain.class.getResource("icons/chart_line_add.png")));
-        tglbtnAddLine.setToolTipText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.tglbtnAddLine.toolTip"));
+        tglbtnAddLine.setToolTipText(rb.getString("LevelEditorMain.tglbtnAddLine.toolTip"));
         westToolBar.add(tglbtnAddLine);
 
         tglbtnAddCurve = new JToggleButton(new ImageIcon(LevelEditorMain.class.getResource("icons/chart_curve_add.png")));
-        tglbtnAddCurve.setToolTipText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.tglbtnAddCurve.toolTip"));
+        tglbtnAddCurve.setToolTipText(rb.getString("LevelEditorMain.tglbtnAddCurve.toolTip"));
         westToolBar.add(tglbtnAddCurve);
 
         tglbtnAddTree = new JToggleButton(new ImageIcon(LevelEditorMain.class.getResource("icons/picture_add.png")));
-        tglbtnAddTree.setToolTipText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.tglbtnAddTree.toolTipText")); //$NON-NLS-1$ //$NON-NLS-2$
+        tglbtnAddTree.setToolTipText(rb.getString("LevelEditorMain.tglbtnAddTree.toolTipText"));
         westToolBar.add(tglbtnAddTree);
+
+        //tglbtnAddEnd
+
+        tglbtnAddEnd = new JToggleButton(new ImageIcon(LevelEditorMain.class.getResource("icons/stop.png")));
+        tglbtnAddEnd.setToolTipText(rb.getString("LevelEditorMain.tglbtnAddEnd.toolTipText"));
+        westToolBar.add(tglbtnAddEnd);
 
         JSeparator separator_8 = new JSeparator(SwingConstants.HORIZONTAL);
         separator_8.setMaximumSize(new Dimension(separator.getMaximumSize().width, separator.getPreferredSize().height));
@@ -682,7 +688,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
             }
         });
         btnDelete.setBorder(new EmptyBorder(8, 7, 8, 7));
-        btnDelete.setToolTipText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.btnDelete.toolTip"));
+        btnDelete.setToolTipText(rb.getString("LevelEditorMain.btnDelete.toolTip"));
         btnDelete.setEnabled(false);
         westToolBar.add(btnDelete);
 
@@ -750,6 +756,22 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
             }
         });
 
+        tglbtnAddEnd.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                if(tglbtnAddEnd.isSelected()) {
+
+                    setEndMode();
+                } else {
+
+                    // default to edit mode if deselected
+                    setSelectMode();
+                }
+            }
+        });
+
         propertiesPanel = new JPanel();
         frmEditor.getContentPane().add(propertiesPanel, BorderLayout.EAST);
         propertiesPanel.setLayout(new BoxLayout(propertiesPanel, BoxLayout.Y_AXIS));
@@ -757,6 +779,13 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         saveDlg = new LevelSaveDialog();
 
         frmEditor.setLocationRelativeTo(null);
+
+        toggleBtns = new ArrayList<JToggleButton>();
+        toggleBtns.add(tglbtnSelect);
+        toggleBtns.add(tglbtnAddLine);
+        toggleBtns.add(tglbtnAddCurve);
+        toggleBtns.add(tglbtnAddTree);
+        toggleBtns.add(tglbtnAddEnd);
     }
 
     private void updateForZoom() {
@@ -783,8 +812,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         if(!canvas.hasElements()) {
 
             JOptionPane.showMessageDialog(frmEditor,
-                    ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.fileChooser.nothingToSave.text"),
-                    ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.fileChooser.nothingToSave.title"),
+                    rb.getString("LevelEditorMain.fileChooser.nothingToSave.text"),
+                    rb.getString("LevelEditorMain.fileChooser.nothingToSave.title"),
                     JOptionPane.WARNING_MESSAGE);
             return false;
         }
@@ -831,7 +860,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         }
 
         unsavedChanges = false;
-        lblLeftStatuslabel.setText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.levelSaved"));
+        lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.levelSaved"));
     }
 
     /**
@@ -865,6 +894,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         try {
 
             Utils.getJsonizer().toJson(level, new FileWriter(filename));
+            lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.levelExported"));
         } catch (IOException e) {
 
             e.printStackTrace();
@@ -895,8 +925,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         if(unsavedChanges) {
 
             int result = JOptionPane.showConfirmDialog(frmEditor,
-                    ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.unsavedChanges.text"),
-                    ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.unsavedChanges.title"),
+                    rb.getString("LevelEditorMain.unsavedChanges.text"),
+                    rb.getString("LevelEditorMain.unsavedChanges.title"),
                     JOptionPane.YES_NO_OPTION);
 
             if(result == JOptionPane.NO_OPTION || result == JOptionPane.CANCEL_OPTION) {
@@ -908,19 +938,34 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         return true;
     }
 
+    private void selectToggle(JToggleButton btnToSelect) {
+
+        for(JToggleButton btn : toggleBtns) {
+
+            btn.setSelected(false);
+        }
+        btnToSelect.setSelected(true);
+    }
+
+    private void clearPropertiesPanel() {
+
+        if(currElemPropsPanel != null) {
+
+            propertiesPanel.remove(currElemPropsPanel);
+            frmEditor.validate();
+        }
+    }
+
     private void setSelectMode() {
 
         canvas.setCursor(Cursor.DEFAULT_CURSOR);
         canvas.setTempDrawableElement(null);
         inDrawingMode = false;
-        tglbtnSelect.setSelected(true);
-        tglbtnAddLine.setSelected(false);
-        tglbtnAddCurve.setSelected(false);
-        tglbtnAddTree.setSelected(false);
+        selectToggle(tglbtnSelect);
         canvas.setGuideLine(null);
         lastPoint = null;
         canvas.repaint();
-        lblLeftStatuslabel.setText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.selectMode"));
+        lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.selectMode"));
     }
 
     private void setLineMode() {
@@ -930,24 +975,17 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         canvas.selectNone();
         currCurve = null;
         inDrawingMode = true;
-        tglbtnAddLine.setSelected(true);
-        tglbtnSelect.setSelected(false);
-        tglbtnAddCurve.setSelected(false);
-        tglbtnAddTree.setSelected(false);
+        selectToggle(tglbtnAddLine);
         btnDelete.setEnabled(false);
 
-        if(currElemPropsPanel != null) {
-
-            propertiesPanel.remove(currElemPropsPanel);
-            frmEditor.validate();
-        }
+        clearPropertiesPanel();
 
         if(lastPoint != null) {
 
-            lblLeftStatuslabel.setText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.lineMode"));
+            lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.lineMode"));
         } else {
 
-            lblLeftStatuslabel.setText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.addFirstPoint"));
+            lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.addFirstPoint"));
         }
     }
 
@@ -958,24 +996,17 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         canvas.selectNone();
         currCurve = null;
         inDrawingMode = true;
-        tglbtnAddCurve.setSelected(true);
-        tglbtnSelect.setSelected(false);
-        tglbtnAddLine.setSelected(false);
-        tglbtnAddTree.setSelected(false);
+        selectToggle(tglbtnAddCurve);
         btnDelete.setEnabled(false);
 
-        if(currElemPropsPanel != null) {
-
-            propertiesPanel.remove(currElemPropsPanel);
-            frmEditor.validate();
-        }
+        clearPropertiesPanel();
 
         if(lastPoint != null) {
 
-            lblLeftStatuslabel.setText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
+            lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
         } else {
 
-            lblLeftStatuslabel.setText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.addFirstPoint"));
+            lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.addFirstPoint"));
         }
     }
 
@@ -986,19 +1017,27 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         canvas.selectNone();
         currCurve = null;
         inDrawingMode = true;
-        tglbtnAddTree.setSelected(true);
-        tglbtnAddCurve.setSelected(false);
-        tglbtnSelect.setSelected(false);
-        tglbtnAddLine.setSelected(false);
+        selectToggle(tglbtnAddTree);
         btnDelete.setEnabled(false);
 
-        if(currElemPropsPanel != null) {
+        clearPropertiesPanel();
 
-            propertiesPanel.remove(currElemPropsPanel);
-            frmEditor.validate();
-        }
+        lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.addTree"));
+    }
 
-        lblLeftStatuslabel.setText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.lblLeftStatuslabel.addTree"));
+    private void setEndMode() {
+
+        canvas.setCursor(Cursor.CROSSHAIR_CURSOR);
+        canvas.setTempDrawableElement(null);
+        canvas.selectNone();
+        currCurve = null;
+        inDrawingMode = true;
+        selectToggle(tglbtnAddEnd);
+        btnDelete.setEnabled(false);
+
+        clearPropertiesPanel();
+
+        lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.addEnd"));
     }
 
     private void newLevel() {
@@ -1020,7 +1059,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 
         JFileChooser fc = new JFileChooser(new File(defaultLevelDir));
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.levelFiles.fileType.text"),
+                rb.getString("LevelEditorMain.levelFiles.fileType.text"),
                 "json");
         fc.setFileFilter(filter);
         int returnVal = fc.showOpenDialog(frmEditor);
@@ -1033,8 +1072,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
                 if(!canvas.loadLevelFromFile(levelFile)) {
 
                     JOptionPane.showMessageDialog(frmEditor,
-                            ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.text"),
-                            ResourceBundle.getBundle("com.deaddropgames.editor.messages").getString("LevelEditorMain.fileChooser.invalidLevelFile.title"),
+                            rb.getString("LevelEditorMain.fileChooser.invalidLevelFile.text"),
+                            rb.getString("LevelEditorMain.fileChooser.invalidLevelFile.title"),
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
@@ -1189,6 +1228,11 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         }
     }
 
+    private boolean isSingleClickElement() {
+
+        return tglbtnAddTree.isSelected() || tglbtnAddEnd.isSelected();
+    }
+
     private void onDrawingModeClick(MouseEvent evt) {
 
         float zoomFactor = canvas.getZoomFactor();
@@ -1197,12 +1241,17 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         canvas.selectNone();
 
         // trees are a special case...they are added with a single click
-        // TODO: generalize objects that can be added with a single click
-        if(tglbtnAddTree.isSelected()) {
+        if(isSingleClickElement()) {
 
-            Tree tree = new Tree(TreePanel.lastWidth, TreePanel.lastHeight, TreePanel.lastTrunkHeight,
-                    TreePanel.lastLevels, point);
-            canvas.addDrawableElement(tree, false);
+            if(tglbtnAddTree.isSelected()) {
+
+                Tree tree = new Tree(TreePanel.lastWidth, TreePanel.lastHeight, TreePanel.lastTrunkHeight,
+                        TreePanel.lastLevels, point);
+                canvas.addDrawableElement(tree, false);
+            } else if(tglbtnAddEnd.isSelected()) {
+
+                canvas.addEnd(point.x);
+            }
         } else { // else we are adding a multi-click element
 
             onMultiClickElement(evt, point);
@@ -1262,14 +1311,12 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 
             if(tglbtnAddLine.isSelected()) {
 
-                lblLeftStatuslabel.setText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                        getString("LevelEditorMain.lblLeftStatuslabel.lineMode"));
+                lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.lineMode"));
             } else if(tglbtnAddCurve.isSelected()) {
 
                 currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
                 canvas.setTempDrawableElement(currCurve);
-                lblLeftStatuslabel.setText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                        getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
+                lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
             }
         } else { // we are continuing a drawable element
 
@@ -1285,8 +1332,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
                     currCurve = new QuadraticBezierCurve(lastPoint, editorSettings.numCurveSegments);
                     currCurve.addPoint(point);
                     canvas.setTempDrawableElement(currCurve);
-                    lblLeftStatuslabel.setText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                            getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
+                    lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
                 } else {
 
                     currCurve.addPoint(point);
@@ -1296,12 +1342,10 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
                         currElemIsNew = false;
                         currCurve = new QuadraticBezierCurve(point, editorSettings.numCurveSegments);
                         canvas.setTempDrawableElement(currCurve);
-                        lblLeftStatuslabel.setText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                                getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
+                        lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.curveModeSecond"));
                     } else {
 
-                        lblLeftStatuslabel.setText(ResourceBundle.getBundle("com.deaddropgames.editor.messages").
-                                getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
+                        lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.curveModeLast"));
                     }
                 }
             }

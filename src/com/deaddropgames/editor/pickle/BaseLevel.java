@@ -8,6 +8,8 @@ public class BaseLevel {
     protected int revision;
     protected int difficulty;
 
+    protected float endX;
+
     public BaseLevel() {
 
         name = "";
@@ -15,6 +17,7 @@ public class BaseLevel {
         author = "";
         revision = 1;
         difficulty = 0;
+        endX = -1f;
     }
 
     public String getName() {
@@ -65,5 +68,15 @@ public class BaseLevel {
     public void setDifficulty(int difficulty) {
 
         this.difficulty = difficulty;
+    }
+
+    public float getEndX() {
+
+        return endX;
+    }
+
+    public void setEndX(float endX) {
+
+        this.endX = endX;
     }
 }

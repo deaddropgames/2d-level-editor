@@ -35,5 +35,9 @@ public class ExportLevel extends BaseLevel {
         author = level.getAuthor();
         revision = level.getRevision();
         difficulty = level.getDifficulty();
+        if(level.getEndX() > 0f) {
+
+            endX = level.getEndX();
+        }
     }
 }
