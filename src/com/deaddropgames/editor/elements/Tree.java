@@ -93,10 +93,8 @@ public class Tree implements IDrawableElement {
 
             for(Triangle triangle : triangles) {
 
-                if(triangle.boundingBox != null) {
-
-                    boundingBox = (Float)boundingBox.createUnion(triangle.boundingBox);
-                }
+                triangle.initBoundingBox(zoomFactor);
+                boundingBox = (Float)boundingBox.createUnion(triangle.getBoundingBox());
             }
         }
     }

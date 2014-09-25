@@ -11,7 +11,7 @@ public class Triangle implements IDrawableElement {
 
     public WorldPoint first, second, third;
 
-    public transient Rectangle2D.Float boundingBox;
+    private transient Rectangle2D.Float boundingBox;
     private transient boolean selected;
     private transient float zoomFactor;
 
@@ -49,6 +49,12 @@ public class Triangle implements IDrawableElement {
                 minY * zoomFactor,
                 Math.abs(maxX - minX) * zoomFactor,
                 Math.abs(maxY - minY) * zoomFactor);
+    }
+
+    public void initBoundingBox(float zoomFactor) {
+
+        this.zoomFactor = zoomFactor;
+        initBoundingBox();
     }
 
     @Override
@@ -140,5 +146,10 @@ public class Triangle implements IDrawableElement {
     public WorldPoint getSelectedPoint() {
 
         return null;
+    }
+
+    public Rectangle2D.Float getBoundingBox() {
+
+        return this.boundingBox;
     }
 }
