@@ -266,7 +266,7 @@ public class LevelCanvas extends JPanel {
             if(element instanceof Tree) {
 
                 // add the tree, but don't forget to translate it relative to the first point...
-                Tree tree = (Tree)element;
+                Tree tree = new Tree((Tree)element); // also make a copy so you don't clobber the original!!
                 tree.location = new WorldPoint(tree.location.x - transPoint.x, -(tree.location.y - transPoint.y));
                 exportLevel.getTrees().add(tree);
             }

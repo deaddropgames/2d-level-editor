@@ -25,6 +25,17 @@ public class Tree implements IDrawableElement {
 
     public Tree() {}
 
+    public Tree(final Tree tree) {
+
+        width = tree.width;
+        height = tree.height;
+        trunkHeight = tree.trunkHeight;
+        levels = tree.levels;
+        location = new WorldPoint(tree.location);
+
+        init();
+    }
+
     public Tree(final float width, final float height, final float trunkHeight, final int levels, final WorldPoint location) {
 
         this.width = width;
