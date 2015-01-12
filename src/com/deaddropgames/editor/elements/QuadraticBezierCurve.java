@@ -146,6 +146,10 @@ public class QuadraticBezierCurve implements IDrawableElement {
         second.init();
         third.init();
 
+        // update some references...
+        lines.get(0).start = first;
+        lines.get(lines.size() - 1).end = third;
+
         // initialize the bounding box
         initBoundingBox();
     }

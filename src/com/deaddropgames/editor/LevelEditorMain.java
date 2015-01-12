@@ -58,10 +58,7 @@ import com.deaddropgames.editor.elements.Tree;
 import com.deaddropgames.editor.elements.WorldPoint;
 import com.deaddropgames.editor.events.ElementChangedEvent;
 import com.deaddropgames.editor.events.IElementChangedListener;
-import com.deaddropgames.editor.gui.LevelCanvas;
-import com.deaddropgames.editor.gui.LevelSaveDialog;
-import com.deaddropgames.editor.gui.PropertiesPanel;
-import com.deaddropgames.editor.gui.TreePanel;
+import com.deaddropgames.editor.gui.*;
 import com.deaddropgames.editor.pickle.ExportLevel;
 import com.deaddropgames.editor.pickle.Utils;
 
@@ -112,6 +109,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 
     // dialogs
     private LevelSaveDialog saveDlg;
+    private SmoothTerrainDialog smoothDlg;
 
     /**
      * Launch the application.
@@ -330,6 +328,21 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         });
         mntmDeleteSelected.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
         mnDraw.add(mntmDeleteSelected);
+
+        JSeparator separator_9 = new JSeparator();
+        mnDraw.add(separator_9);
+
+        JMenuItem mntmSmoothSelected = new JMenuItem(rb.getString("LevelEditorMain.mntmSmooth.text"));
+        mntmSmoothSelected.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+
+                smoothDlg.update();
+                smoothDlg.setLocationRelativeTo(frmEditor);
+                smoothDlg.setVisible(true);
+            }
+        });
+        mnDraw.add(mntmSmoothSelected);
 
         JMenu mnHelp = new JMenu(rb.
                 getString("LevelEditorMain.mnHelp.text"));
@@ -777,6 +790,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         propertiesPanel.setLayout(new BoxLayout(propertiesPanel, BoxLayout.Y_AXIS));
 
         saveDlg = new LevelSaveDialog();
+        smoothDlg = new SmoothTerrainDialog(canvas);
 
         frmEditor.setLocationRelativeTo(null);
 

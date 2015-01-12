@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Rectangle2D.Float;
 
+import com.badlogic.gdx.math.Vector2;
 import com.deaddropgames.editor.Globals;
 import com.deaddropgames.editor.gui.LinePanel;
 import com.deaddropgames.editor.gui.PropertiesPanel;
@@ -182,5 +183,62 @@ public class Line implements IDrawableElement {
     public WorldPoint getSelectedPoint() {
 
         return this.selectedPoint;
+    }
+
+    /**
+     * Converts the line to a vector centred at the origin
+     * @return a vector
+     */
+    public Vector2 toVector() {
+
+        Vector2 vector = null;
+
+        if(start != null && end != null) {
+
+            vector = new Vector2(end.x - start.x, end.y - start.y);
+        }
+
+        return vector;
+    }
+
+    public void clip(float percent, boolean fromStart) {
+
+        if(start == null || end == null) {
+
+            return;
+        }
+
+        if(percent <= 0f || percent >= 1f) {
+
+            System.err.println("Invalid percent encounted in Line.clip(): " + String.valueOf(percent));
+        }
+
+        // convert to vector
+        Vector2 vector;
+        if(fromStart) {
+
+            vector = new Vector2(start.x - end.x, start.y - end.y);
+        } else {
+
+            vector = toVector();
+        }
+
+        // scale vector
+        vector.scl(1f - percent);
+
+        // convert back to point
+        if(fromStart) {
+
+            vector.x += end.x;
+            vector.y += end.y;
+            start.x = vector.x;
+            start.y = vector.y;
+        } else {
+
+            vector.x += start.x;
+            vector.y += start.y;
+            end.x = vector.x;
+            end.y = vector.y;
+        }
     }
 }

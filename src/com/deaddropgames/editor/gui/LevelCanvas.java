@@ -18,6 +18,7 @@ import java.awt.Point;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class LevelCanvas extends JPanel {
 
@@ -463,6 +464,88 @@ public class LevelCanvas extends JPanel {
         level.setEndX(endX);
     }
 
+    /**
+     * Finds large terrain angles in order to smooth them
+     * @param minAngle the minimum angle to consider the angle large
+     * @return integer of the number of eligible terrain angles found
+     */
+    public int findLargeTerrainAngles(float minAngle) {
+
+        int numFound = 0;
+        for(Object objList : level.getTerrainGroups()) {
+
+            IDrawableElement first, second = null;
+            float angle;
+            Array list = (Array)objList;
+            for(Object objElem : list) {
+
+                first = second;
+                second = (IDrawableElement)objElem;
+                if(first != null) {
+
+                    angle = getAngleBetweenElements(first, second, null);
+                    if(angle > minAngle) {
+
+                        numFound++;
+                    }
+                }
+            }
+        }
+
+        return numFound;
+    }
+
+    @SuppressWarnings("unchecked")
+    public void smoothLargeTerrainAngles(float minAngle, float clipPercent) {
+
+        for(Object objList : level.getTerrainGroups()) {
+
+            IDrawableElement first, second = null;
+            float angle;
+            Array list = (Array)objList;
+            // keep track of the lines we might have to insert at the end
+            ArrayList<Integer> indices = new ArrayList<Integer>();
+            ArrayList<Line> insertLines = new ArrayList<Line>();
+            int index = 0;
+            for(Object objElem : list) {
+
+                first = second;
+                second = (IDrawableElement)objElem;
+                if(first != null) {
+
+                    ArrayList<Line> lines = new ArrayList<Line>();
+                    angle = getAngleBetweenElements(first, second, lines);
+                    if(angle > minAngle) {
+
+                        // clip the lines
+                        lines.get(0).clip(clipPercent, false);
+                        lines.get(1).clip(clipPercent, true);
+
+                        // TODO:
+
+                        // insert a new line between them
+                        // NOTE: we can't do this in the loop, we do it at the end
+                        indices.add(index);
+                        insertLines.add(new Line(new WorldPoint(lines.get(0).end),
+                                new WorldPoint(lines.get(1).start)));
+                    }
+                }
+
+                index++;
+            }
+
+            for(int ii = 0; ii < indices.size(); ii++) {
+
+                list.insert(indices.get(ii), insertLines.get(ii));
+                for(int jj = ii + 1; jj < indices.size(); jj++) {
+
+                    // every time we insert, we have to make sure any further inserts are also incremented
+                    indices.set(jj, indices.get(jj) + 1);
+                }
+            }
+        }
+    }
+
     private static WorldPoint getStartPoint(IDrawableElement element) {
 
         WorldPoint point = null;
@@ -553,5 +636,61 @@ public class LevelCanvas extends JPanel {
         }
 
         return null;
+    }
+
+    /**
+     * Calculates the connection angle between the first and second element, measured in a clockwise fashion from first
+     * to second
+     * @param first a curve or line
+     * @param second a curve or line
+     * @param lines a list that will contain the found lines, or null if unneeded
+     * @return the angle in degrees or a negative value if the calculation isn't possible or there's an error
+     */
+    private float getAngleBetweenElements(IDrawableElement first, IDrawableElement second, ArrayList<Line> lines) {
+
+        // we can only do the calculation between lines, curves and lines and curves
+        if(!(first instanceof Line || first instanceof QuadraticBezierCurve) ||
+                !(second instanceof Line || second instanceof QuadraticBezierCurve)) {
+
+            return -1f;
+        }
+
+        // sanity check...
+        if((first instanceof QuadraticBezierCurve && ((QuadraticBezierCurve)first).getLines().size() == 0) ||
+                (second instanceof QuadraticBezierCurve && ((QuadraticBezierCurve)second).getLines().size() == 0)) {
+
+            return -1f;
+        }
+
+        QuadraticBezierCurve curve;
+        Line firstLine, secondLine;
+
+        // convert our elements to lines...if it's a curve, use the last line if it's the first element, or the first
+        // line if it's the second element
+        if(first instanceof Line) {
+
+            firstLine = (Line)first;
+        } else { // first instanceof QuadraticBezierCurve
+
+            curve = (QuadraticBezierCurve)first;
+            firstLine = curve.getLines().get(curve.getLines().size() - 1);
+        }
+
+        if(second instanceof Line) {
+
+            secondLine = (Line)second;
+        } else { // second instanceof QuadraticBezierCurve
+
+            curve = (QuadraticBezierCurve)second;
+            secondLine = curve.getLines().get(0);
+        }
+
+        if(lines != null) {
+
+            lines.add(firstLine);
+            lines.add(secondLine);
+        }
+
+        return 180f - secondLine.toVector().angle(firstLine.toVector());
     }
 }
