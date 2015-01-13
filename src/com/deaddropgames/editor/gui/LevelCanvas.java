@@ -495,6 +495,11 @@ public class LevelCanvas extends JPanel {
         return numFound;
     }
 
+    /**
+     * Smooths out any terrain angles greater than minAngle by clipPercent on each attached element
+     * @param minAngle the minimum angle to apply smoothing to
+     * @param clipPercent the percent with which to clip each attached element
+     */
     @SuppressWarnings("unchecked")
     public void smoothLargeTerrainAngles(float minAngle, float clipPercent) {
 
@@ -520,8 +525,6 @@ public class LevelCanvas extends JPanel {
                         // clip the lines
                         lines.get(0).clip(clipPercent, false);
                         lines.get(1).clip(clipPercent, true);
-
-                        // TODO:
 
                         // insert a new line between them
                         // NOTE: we can't do this in the loop, we do it at the end
