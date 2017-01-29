@@ -8,16 +8,45 @@ repositories {
 }
 
 dependencies {
-    compile group: "com.badlogicgames.gdx", name: "gdx", version: "1.4.1"
+    compile group: "com.badlogicgames.gdx", name: "gdx", version: "1.9.5"
 }
 
 sourceCompatibility = 1.7
 sourceSets.main.java.srcDirs = [ "src/" ]
 sourceSets.main.resources.srcDirs = sourceSets.main.java.srcDirs
-version = '1.0'
+version = '0.5.0'
+
+project.ext.mainClassName = "com.deaddropgames.editor.LevelEditorMain";
 
 task run(dependsOn: classes, type: JavaExec) {
     main = "com.deaddropgames.editor.LevelEditorMain"
     classpath = sourceSets.main.runtimeClasspath
     standardInput = System.in
 }
+
+task dist(type: Jar) {
+    // TODO: this currently only works on my home environment
+    /*doFirst {
+        copy {
+            from "../stunt-mountain/desktop/build/libs/"
+            into "res/bin"
+            include "desktop-*.jar"
+        }
+        copy {
+            from("conf") {
+                include "*.json"
+                filter{String line -> line.replaceAll("\\s+\"simJar\":.+", "    \"simJar\": \"bin/desktop-1.0.jar\",")}
+            }
+            into "res/conf"
+        }
+    }*/
+    from files(sourceSets.main.output.classesDir)
+    from files(sourceSets.main.output.resourcesDir)
+    from {configurations.compile.collect {zipTree(it)}}
+
+    manifest {
+        attributes 'Main-Class': project.mainClassName
+    }
+}
+
+dist.dependsOn classes
