@@ -37,3 +37,6 @@ bin
 test.json
 .idea
 export
+.gradle
+build
+res
