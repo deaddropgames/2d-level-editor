@@ -23,7 +23,9 @@ import java.awt.event.InputEvent;
 import javax.swing.JSeparator;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.awt.BorderLayout;
@@ -61,6 +63,7 @@ import com.deaddropgames.editor.events.IElementChangedListener;
 import com.deaddropgames.editor.gui.*;
 import com.deaddropgames.editor.pickle.ExportLevel;
 import com.deaddropgames.editor.pickle.Utils;
+import com.deaddropgames.editor.web.LevelRepository;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -111,6 +114,9 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
     private LevelSaveDialog saveDlg;
     private SmoothTerrainDialog smoothDlg;
 
+    // level repository - to interact with the online repository
+    private LevelRepository levelRepository;
+
     /**
      * Launch the application.
      */
@@ -151,6 +157,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         viewportCentre = null;
 
         initialize();
+
+        levelRepository = new LevelRepository();
     }
 
     /**
@@ -249,6 +257,16 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
             }
         });
         mnFile.add(mntmExport);
+
+        JMenuItem mntmUpload = new JMenuItem(rb.getString("LevelEditorMain.mntmUpload.text"));
+        mntmUpload.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent arg0) {
+
+                uploadLevel();
+            }
+        });
+        mnFile.add(mntmUpload);
 
         JSeparator separator_2 = new JSeparator();
         mnFile.add(separator_2);
@@ -352,7 +370,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         mntmAbout.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 JOptionPane.showMessageDialog(frmEditor,
-                        rb.getString("LevelEditorMain.aboutDlg.text"),
+                        rb.getString("LevelEditorMain.aboutDlg.text") +
+                                " " + Calendar.getInstance().get(Calendar.YEAR),
                         rb.getString("LevelEditorMain.aboutDlg.title"),
                         JOptionPane.INFORMATION_MESSAGE);
             }
@@ -443,6 +462,17 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         });
         btnExport.setToolTipText(rb.getString("LevelEditorMain.btnExport.toolTip"));
         toolBar.add(btnExport);
+
+        JButton btnUpload = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/arrow_up.png")));
+        btnUpload.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+
+                uploadLevel();
+            }
+        });
+        btnUpload.setToolTipText(rb.getString("LevelEditorMain.btnUpload.toolTip"));
+        toolBar.add(btnUpload);
 
         JSeparator separator_4 = new JSeparator();
         separator_4.setOrientation(SwingConstants.VERTICAL);
@@ -794,7 +824,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 
         frmEditor.setLocationRelativeTo(null);
 
-        toggleBtns = new ArrayList<JToggleButton>();
+        toggleBtns = new ArrayList<>();
         toggleBtns.add(tglbtnSelect);
         toggleBtns.add(tglbtnAddLine);
         toggleBtns.add(tglbtnAddCurve);
@@ -1091,10 +1121,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-            } catch (HeadlessException ex) {
-
-                ex.printStackTrace();
-            } catch (IOException ex) {
+            } catch (HeadlessException | IOException ex) {
 
                 ex.printStackTrace();
             }
@@ -1367,5 +1394,68 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 
         // save for later
         lastPoint = new WorldPoint(point);
+    }
+
+    private void uploadLevel() {
+
+        // make sure there is something to upload...
+        if(!canvas.hasElements()) {
+
+            JOptionPane.showMessageDialog(frmEditor,
+                    rb.getString("LevelEditorMain.fileChooser.nothingToSave.text"),
+                    rb.getString("LevelEditorMain.fileChooser.nothingToSave.title"),
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (!levelRepository.hasToken()) {
+
+            if (!initializeUserToken()) {
+
+                return;
+            }
+        }
+
+        // TODO: show upload dialog
+
+        // TODO: upload the level
+    }
+
+    private boolean initializeUserToken() {
+
+        LoginDialog loginDialog = new LoginDialog();
+        loginDialog.setLocationRelativeTo(frmEditor);
+        loginDialog.setVisible(true);
+
+        if(loginDialog.wasCancelled()) {
+
+            return false;
+        }
+
+        boolean initialized;
+        try {
+
+            initialized = levelRepository.initToken(loginDialog.getUsername(), loginDialog.getPassword());
+        } catch (IOException | URISyntaxException e) {
+
+            JOptionPane.showMessageDialog(frmEditor,
+                    e.getMessage(),
+                    rb.getString("LevelEditorMain.btnUpload.failedLogin.title"),
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        // likely means we failed login
+        if (!initialized) {
+
+            JOptionPane.showMessageDialog(frmEditor,
+                    rb.getString("LevelEditorMain.btnUpload.failedLogin.text") + "\n" +
+                            levelRepository.getStatusLine().getReasonPhrase(),
+                    rb.getString("LevelEditorMain.btnUpload.failedLogin.title"),
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        return true;
     }
 }

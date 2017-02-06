@@ -1,6 +1,7 @@
 package com.deaddropgames.editor.pickle;
 
 import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonWriter;
 import com.deaddropgames.editor.elements.*;
 
 public class Utils {
@@ -11,7 +12,7 @@ public class Utils {
 
         if(json == null) {
 
-            json = new Json();
+            json = new Json(JsonWriter.OutputType.json);
 
             // add some class tags for our internal classes...
             json.addClassTag("point", WorldPoint.class);
