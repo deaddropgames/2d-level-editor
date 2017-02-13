@@ -295,6 +295,12 @@ public class LevelCanvas extends JPanel {
         return true;
     }
 
+    public void setLevel(Level level) {
+
+        this.level = level;
+        level.init();
+    }
+
     public void updateForViewportChange(final Point point) {
 
         bipedRef.setOffset(point);

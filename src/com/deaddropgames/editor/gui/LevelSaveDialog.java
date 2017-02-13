@@ -22,11 +22,9 @@ import java.awt.Insets;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.JSpinner;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JTextArea;
-import javax.swing.SpinnerNumberModel;
 
 import com.deaddropgames.editor.pickle.BaseLevel;
 
@@ -39,17 +37,16 @@ import java.awt.event.ActionEvent;
 public class LevelSaveDialog extends JDialog implements ActionListener, MouseListener {
 
     final private String[] reservedFilenames = {"biped.json", "draw.json", "level.json", "ski.json", "conf.json"};
-    private final JPanel contentPanel = new JPanel();
-    protected JTextField txtTitletextfield;
-    protected JTextField txtAuthortextfield;
-    protected JComboBox comboDifficulty;
-    protected JTextArea txtDescriptiontextarea;
-    protected JTextField txtFilenametextfield;
-    protected JButton okButton;
-    protected JButton cancelButton;
-    protected boolean wasCancelled;
-    protected String defaultDir;
-    protected String currFilename;
+    private JTextField txtTitletextfield;
+    private JTextField txtAuthortextfield;
+    private JComboBox<String> comboDifficulty;
+    private JTextArea txtDescriptiontextarea;
+    private JTextField txtFilenametextfield;
+    private JButton okButton;
+    private JButton cancelButton;
+    private boolean wasCancelled;
+    private String defaultDir;
+    private String currFilename;
 
     public LevelSaveDialog() {
 
@@ -57,6 +54,7 @@ public class LevelSaveDialog extends JDialog implements ActionListener, MouseLis
 
         setBounds(100, 100, 450, 300);
         getContentPane().setLayout(new BorderLayout());
+        JPanel contentPanel = new JPanel();
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         GridBagLayout gbl_contentPanel = new GridBagLayout();
@@ -113,8 +111,8 @@ public class LevelSaveDialog extends JDialog implements ActionListener, MouseLis
             contentPanel.add(lblDifficulty, gbc_lblDifficulty);
         }
         {
-            comboDifficulty = new JComboBox();
-            comboDifficulty.setModel(new DefaultComboBoxModel(new String[] {
+            comboDifficulty = new JComboBox<>();
+            comboDifficulty.setModel(new DefaultComboBoxModel<>(new String[] {
                     ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.comboDifficulty.circle"),
                     ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.comboDifficulty.square"),
                     ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.comboDifficulty.diamond"),

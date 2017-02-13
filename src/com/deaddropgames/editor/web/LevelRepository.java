@@ -2,22 +2,20 @@ package com.deaddropgames.editor.web;
 
 
 import com.badlogic.gdx.net.HttpStatus;
-import com.deaddropgames.editor.pickle.ApiBaseList;
-import com.deaddropgames.editor.pickle.AuthToken;
-import com.deaddropgames.editor.pickle.Level;
-import com.deaddropgames.editor.pickle.Utils;
+import com.deaddropgames.editor.pickle.*;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.*;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -30,10 +28,12 @@ public class LevelRepository {
     private String token;
     private StatusLine statusLine;
 
-    private final String baseUrl = "http://localhost:8000";
-    private final String initTokenPath = "auth/token/";
-    private final String getLevelPath = "stuntski/api/editor/%d/";
-    private final String getLevelListPath = "stuntski/api/levels/";
+    private static final String baseUrl = "http://localhost:8000";
+    private static final String initTokenPath = "auth/token/";
+    private static final String getLevelPath = "stuntski/api/editor/%d/";
+    private static final String getLevelListPath = "stuntski/api/levels/";
+    private static final String postLevelPath = "stuntski/api/editor/save/";
+    private static final String putLevelPath = "stuntski/api/editor/save/%d/";
 
     public LevelRepository() {
 
@@ -101,14 +101,18 @@ public class LevelRepository {
     public ApiBaseList getLevelList(String path)
             throws IOException, URISyntaxException {
 
-        // if path isn't null, it's likely a next/previous link
+        // if path is null use the default, otherwise assume the full path is passed through
+        URL url;
         if (path == null) {
 
-            path = getLevelListPath;
+            url = createUrl(getLevelListPath);
+        } else {
+
+            url = new URL(path);
         }
 
-        HttpGet httpGet = new HttpGet(createUrl(path).toURI());
-        addAuthTokenToRequest(httpGet);
+        HttpGet httpGet = new HttpGet(url.toURI());
+        addDefaultRequestHeaders(httpGet);
 
         ApiBaseList levelList = null;
         try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
@@ -135,7 +139,7 @@ public class LevelRepository {
             throws IOException, URISyntaxException {
 
         HttpGet httpGet = new HttpGet(createUrl(String.format(getLevelPath, id)).toURI());
-        addAuthTokenToRequest(httpGet);
+        addDefaultRequestHeaders(httpGet);
 
         Level level = null;
         try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
@@ -151,13 +155,88 @@ public class LevelRepository {
         return level;
     }
 
+    /**
+     * Create's a level by uploading it via POST
+     * @param uploadLevel the level to upload
+     * @return the ID of the created level
+     * @throws IOException unless we messed up our URIs above, this won't throw
+     * @throws URISyntaxException unless we messed up our URIs above, this won't throw
+     */
+    public long createLevel(final UploadLevel uploadLevel)
+            throws IOException, URISyntaxException {
+
+        HttpPost httpPost = new HttpPost(createUrl(postLevelPath).toURI());
+        addDefaultRequestHeaders(httpPost);
+        addUploadLevelToBody(uploadLevel, httpPost);
+
+        long id = 0;
+        try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
+
+            statusLine = response.getStatusLine();
+
+            if (statusLine.getStatusCode() == HttpStatus.SC_CREATED) {
+
+                id = Utils.getJsonizer().fromJson(ResourceId.class, response.getEntity().getContent()).getId();
+            }
+        }
+
+        return id;
+    }
+
+    /**
+     * Modifies an existing level by uploading via PUT
+     * @param id the ID of the level
+     * @param uploadLevel the level to upload
+     * @return the ID of the level
+     * @throws IOException if the returned ID is different from the input
+     * @throws URISyntaxException unless we messed up our URIs above, this won't throw
+     */
+    public long modifyLevel(long id, final UploadLevel uploadLevel)
+            throws IOException, URISyntaxException {
+
+        HttpPut httpPut = new HttpPut(createUrl(String.format(putLevelPath, id)).toURI());
+        addDefaultRequestHeaders(httpPut);
+        addUploadLevelToBody(uploadLevel, httpPut);
+
+        long retId = 0;
+        try (CloseableHttpResponse response = httpclient.execute(httpPut)) {
+
+            statusLine = response.getStatusLine();
+
+            if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+
+                retId = Utils.getJsonizer().fromJson(ResourceId.class, response.getEntity().getContent()).getId();
+
+                if (retId != id) {
+
+                    throw new IOException("Returned ");
+                }
+            }
+        }
+
+        return retId;
+    }
+
     private URL createUrl(final String path) throws MalformedURLException {
 
         return new URL(new URL(baseUrl), path);
     }
 
-    private void addAuthTokenToRequest(HttpRequestBase request) {
+    private void addDefaultRequestHeaders(HttpRequestBase request) {
 
-        request.addHeader("Authorization", "Token " + token);
+        if (token != null) {
+
+            request.addHeader(HttpHeaders.AUTHORIZATION, "Token " + token);
+        }
+        request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+        request.addHeader(HttpHeaders.CONTENT_ENCODING, "UTF-8");
+    }
+
+    private void addUploadLevelToBody(final UploadLevel uploadLevel, HttpEntityEnclosingRequestBase request)
+            throws UnsupportedEncodingException {
+
+        String data = Utils.getJsonizer().toJson(uploadLevel);
+        HttpEntity entity = new ByteArrayEntity(data.getBytes("UTF-8"));
+        request.setEntity(entity);
     }
 }

@@ -2,6 +2,7 @@ package com.deaddropgames.editor.gui;
 
 import com.badlogic.gdx.utils.JsonValue;
 import com.deaddropgames.editor.pickle.ApiBaseList;
+import com.deaddropgames.editor.pickle.Level;
 import com.deaddropgames.editor.web.LevelRepository;
 
 import javax.swing.*;
@@ -11,7 +12,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ResourceBundle;
 
-public class LevelListDialog extends JDialog {
+public class DownloadLevelDialog extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
@@ -23,12 +24,15 @@ public class LevelListDialog extends JDialog {
 
     private LevelRepository levelRepository;
     private ApiBaseList levelList;
+    private Level level;
+    private int page;
 
-    public LevelListDialog(LevelRepository levelRepository) {
+    public DownloadLevelDialog(LevelRepository levelRepository) {
 
         this.levelRepository = levelRepository;
 
         statusLabel.setText("");
+        level = null;
 
         setBounds(100, 100, 600, 500);
         setContentPane(contentPane);
@@ -36,6 +40,7 @@ public class LevelListDialog extends JDialog {
         setTitle(ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelListDialog.title"));
         levelListTableModel = new LevelListTableModel();
         levelTable.setModel(levelListTableModel);
+        levelTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         getRootPane().setDefaultButton(buttonOK);
 
@@ -91,13 +96,44 @@ public class LevelListDialog extends JDialog {
             }
         });
 
+        page = 1;
         loadLevelList(null);
+    }
+
+    public Level getLevel() {
+
+        return level;
     }
 
     private void onOK() {
 
-        // TODO: load the level and return it to the editor
-        dispose();
+        level = null;
+        int row = levelTable.getSelectedRow();
+        if (row < 0) {
+
+            JOptionPane.showMessageDialog(this,
+                    ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelListDialog.noRowSelected.text"),
+                    ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelListDialog.noRowSelected.title"),
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        long id = levelListTableModel.getSelectedId(row);
+        try {
+
+            level = levelRepository.getLevel(id);
+
+            // since we don't send the ID in the body for a PUT, we need to set it manually (since it's transient)
+            level.setId(id);
+        } catch (IOException | URISyntaxException e) {
+
+            JOptionPane.showMessageDialog(this,
+                    e.getMessage(),
+                    ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelListDialog.failedLevelLoad.title"),
+                    JOptionPane.ERROR_MESSAGE);
+        }
+
+        setVisible(false);
     }
 
     private void onCancel() {
@@ -107,16 +143,17 @@ public class LevelListDialog extends JDialog {
 
     private void onPrevious() {
 
+        page--;
         loadLevelList(levelList.getPrevious());
     }
 
     private void onNext() {
 
+        page++;
         loadLevelList(levelList.getNext());
     }
 
     private void loadLevelList(String path) {
-
 
         try {
 
@@ -131,7 +168,7 @@ public class LevelListDialog extends JDialog {
 
         statusLabel.setText(String.format(
                 ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelListDialog.results.label"),
-                levelList.getCount()));
+                levelList.getCount(), page));
 
         previousBtn.setEnabled(false);
         nextBtn.setEnabled(false);
@@ -158,20 +195,34 @@ public class LevelListDialog extends JDialog {
                 ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelListDialog.table.col4Name")
         };
 
+        private String[] difficultyNames = {
+                ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.comboDifficulty.circle"),
+                ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.comboDifficulty.square"),
+                ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.comboDifficulty.diamond"),
+                ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.comboDifficulty.doubleDiamond")
+        };
+
         private Object[][] data = {};
+        private long[] id = {};
 
         void updateTable(final ApiBaseList levelList) {
 
-            data = new Object[levelList.getCount()][4];
-            for (int ii = 0; ii < levelList.getCount(); ii++) {
+            int numResults = levelList.getResults().size;
+            data = new Object[numResults][4];
+            id = new long[numResults];
+            for (int ii = 0; ii < numResults; ii++) {
 
                 JsonValue value = (JsonValue)levelList.getResults().get(ii);
 
+                id[ii] = value.get("id").asLong();
                 data[ii][0] = value.get("name").asString();
                 data[ii][1] = value.get("author").asString();
-                data[ii][2] = value.get("difficulty").asString();
+                int difficulty = value.get("difficulty").asInt();
+                data[ii][2] = difficulty < difficultyNames.length ? difficultyNames[difficulty] : "?";
                 data[ii][3] = value.get("description").asString();
             }
+
+            fireTableDataChanged();
         }
 
         @Override
@@ -196,6 +247,11 @@ public class LevelListDialog extends JDialog {
         public String getColumnName(int columnIndex) {
 
             return columnNames[columnIndex];
+        }
+
+        long getSelectedId(int rowIndex) {
+
+            return id[rowIndex];
         }
     }
 }

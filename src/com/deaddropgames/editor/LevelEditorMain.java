@@ -991,6 +991,8 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         scrollPane.getViewport().setViewPosition(new Point(0, 0));
 
         btnDelete.setEnabled(false);
+
+        lblLeftStatuslabel.setText(rb.getString("LevelEditorMain.lblLeftStatuslabel.newLevel"));
     }
 
     private boolean checkSavedChanges() {
@@ -1445,24 +1447,46 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
             }
         }
 
-        // TODO: show upload dialog
+        UploadLevelDialog uploadLevelDialog = new UploadLevelDialog(levelRepository,
+                canvas.getLevelForExport(), canvas.getLevel());
+        uploadLevelDialog.setLocationRelativeTo(frmEditor);
+        uploadLevelDialog.setVisible(true);
 
-        // TODO: upload the level
+        if (!uploadLevelDialog.wasCancelled()) {
+
+            lblLeftStatuslabel.setText(String.format(rb.getString("LevelEditorMain.lblLeftStatuslabel.levelUploaded"),
+                    uploadLevelDialog.getTitle()));
+            unsavedChanges = false;
+        }
     }
 
     private void downloadLevel() {
 
-        if (!levelRepository.hasToken()) {
+        if(!checkSavedChanges()) {
 
-            if (!initializeUserToken()) {
-
-                return;
-            }
+            return;
         }
 
-        LevelListDialog levelListDialog = new LevelListDialog(levelRepository);
-        levelListDialog.setLocationRelativeTo(frmEditor);
-        levelListDialog.setVisible(true);
+        DownloadLevelDialog downloadLevelDialog = new DownloadLevelDialog(levelRepository);
+        downloadLevelDialog.setLocationRelativeTo(frmEditor);
+        downloadLevelDialog.setVisible(true);
+
+        if (downloadLevelDialog.getLevel() != null) {
+
+            resetLevel();
+
+            canvas.setLevel(downloadLevelDialog.getLevel());
+            downloadLevelDialog.dispose();
+
+            currFilename = null;
+
+            unsavedChanges = false;
+
+            canvas.repaint();
+
+            lblLeftStatuslabel.setText(String.format(rb.getString("LevelEditorMain.lblLeftStatuslabel.levelDownloaded"),
+                    downloadLevelDialog.getLevel().getName()));
+        }
     }
 
     private boolean initializeUserToken() {

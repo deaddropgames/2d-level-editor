@@ -13,6 +13,7 @@ public class Utils {
         if(json == null) {
 
             json = new Json(JsonWriter.OutputType.json);
+            json.setIgnoreUnknownFields(true);
 
             // add some class tags for our internal classes...
             json.addClassTag("point", WorldPoint.class);
