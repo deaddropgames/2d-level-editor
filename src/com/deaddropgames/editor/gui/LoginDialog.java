@@ -1,5 +1,7 @@
 package com.deaddropgames.editor.gui;
 
+import com.deaddropgames.editor.web.LevelRepository;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -18,8 +20,13 @@ public class LoginDialog extends JDialog implements ActionListener {
     private JButton cancelButton;
     private JButton linkButton;
     private boolean wasCancelled;
+    private LevelRepository levelRepository;
+    private ResourceBundle rb;
 
-    public LoginDialog() {
+    public LoginDialog(LevelRepository levelRepository, final ResourceBundle rb) {
+
+        this.levelRepository = levelRepository;
+        this.rb = rb;
 
         setModalityType(ModalityType.APPLICATION_MODAL);
         setTitle(ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.loginDlg.title"));
@@ -121,16 +128,6 @@ public class LoginDialog extends JDialog implements ActionListener {
         return wasCancelled;
     }
 
-    public String getUsername() {
-
-        return txtUsername.getText();
-    }
-
-    public char[] getPassword() {
-
-        return txtPassword.getPassword();
-    }
-
     @Override
     public void actionPerformed(ActionEvent e) {
 
@@ -158,6 +155,12 @@ public class LoginDialog extends JDialog implements ActionListener {
 
             // set cancelled flag to false
             wasCancelled = false;
+
+            // attempt to initialize the token
+            if (!initializeToken()) {
+
+                return;
+            }
         } else if(e.getSource() == cancelButton) {
 
             wasCancelled = true;
@@ -177,5 +180,34 @@ public class LoginDialog extends JDialog implements ActionListener {
 
         // hide the dialog
         setVisible(false);
+    }
+
+    private boolean initializeToken() {
+
+        boolean initialized;
+        try {
+
+            initialized = levelRepository.initToken(txtUsername.getText(), txtPassword.getPassword());
+        } catch (IOException | URISyntaxException e) {
+
+            JOptionPane.showMessageDialog(this,
+                    e.getMessage(),
+                    rb.getString("LevelEditorMain.btnUpload.failedLogin.title"),
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        // likely means we failed login
+        if (!initialized) {
+
+            JOptionPane.showMessageDialog(this,
+                    rb.getString("LevelEditorMain.btnUpload.failedLogin.text") + "\n" +
+                            levelRepository.getStatusLine().getReasonPhrase(),
+                    rb.getString("LevelEditorMain.btnUpload.failedLogin.title"),
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        return true;
     }
 }

@@ -5,7 +5,6 @@ public class BaseLevel {
     protected String name;
     protected String description;
     protected String author;
-    protected int revision;
     protected int difficulty;
 
     protected float endX;
@@ -15,7 +14,6 @@ public class BaseLevel {
         name = "";
         description = "";
         author = "";
-        revision = 1;
         difficulty = 0;
         endX = -1f;
     }
@@ -48,16 +46,6 @@ public class BaseLevel {
     public void setAuthor(String author) {
 
         this.author = author;
-    }
-
-    public int getRevision() {
-
-        return revision;
-    }
-
-    public void setRevision(int revision) {
-
-        this.revision = revision;
     }
 
     public int getDifficulty() {

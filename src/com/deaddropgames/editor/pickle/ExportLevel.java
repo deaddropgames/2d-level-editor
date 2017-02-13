@@ -14,8 +14,8 @@ public class ExportLevel extends BaseLevel {
 
         super();
 
-        polyLines = new ArrayList<PolyLine>();
-        trees = new ArrayList<Tree>();
+        polyLines = new ArrayList<>();
+        trees = new ArrayList<>();
     }
 
     public ArrayList<PolyLine> getPolyLines() {
@@ -33,7 +33,6 @@ public class ExportLevel extends BaseLevel {
         name = level.getName();
         description = level.getDescription();
         author = level.getAuthor();
-        revision = level.getRevision();
         difficulty = level.getDifficulty();
         if(level.getEndX() > 0f) {
 

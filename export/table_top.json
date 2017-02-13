@@ -2,7 +2,6 @@
   "name": "Table Top",
   "description": "Simple table top jump.",
   "author": "Tristen Georgiou",
-  "revision": 1,
   "difficulty": 1,
   "polyLines": [
     {

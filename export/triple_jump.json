@@ -2,7 +2,6 @@
   "name": "Triple Jump",
   "description": "Just three easy jumps.",
   "author": "Tristen Georgiou",
-  "revision": 1,
   "difficulty": 1,
   "polyLines": [
     {

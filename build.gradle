@@ -2,9 +2,23 @@ apply plugin: "eclipse"
 apply plugin: "idea"
 apply plugin: "java"
 
+configurations {
+    javac2
+}
+
+dependencies {
+    javac2 name: 'javac2'
+    javac2 name: 'jdom'
+    javac2 name: 'asm-all'
+    javac2 name: 'jgoodies-forms'
+}
+
 repositories {
     mavenCentral()
     mavenLocal()
+    flatDir {
+        dirs ideaHome + '/lib'
+    }
 }
 
 dependencies {
@@ -50,4 +64,26 @@ task dist(type: Jar) {
     }
 }
 
+task copyUiDesignerClasses(type: Copy) {
+    project.sourceSets.main.output.classesDir.mkdirs()
+    from zipTree(ideaHome + '/lib/javac2.jar')
+    into project.sourceSets.main.output.classesDir
+    include 'com/intellij/uiDesigner/core/**'
+}
+
+task compileForms << {
+    ant.taskdef name: 'javac2', classname: 'com.intellij.ant.Javac2', classpath: configurations.javac2.asPath
+    ant.javac2 srcdir: project.sourceSets.main.java.srcDirs.join(':'),
+            classpath: project.sourceSets.main.compileClasspath.asPath,
+            destdir: project.sourceSets.main.output.classesDir,
+            source: sourceCompatibility,
+            target: targetCompatibility,
+            includeAntRuntime: false
+}
+
 dist.dependsOn classes
+dist.dependsOn compileForms
+run.dependsOn compileForms
+
+jar.dependsOn('compileForms')
+compileForms.dependsOn('copyUiDesignerClasses')

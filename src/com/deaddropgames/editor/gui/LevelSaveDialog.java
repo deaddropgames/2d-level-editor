@@ -42,7 +42,6 @@ public class LevelSaveDialog extends JDialog implements ActionListener, MouseLis
     private final JPanel contentPanel = new JPanel();
     protected JTextField txtTitletextfield;
     protected JTextField txtAuthortextfield;
-    protected JSpinner spinnerRevision;
     protected JComboBox comboDifficulty;
     protected JTextArea txtDescriptiontextarea;
     protected JTextField txtFilenametextfield;
@@ -103,24 +102,6 @@ public class LevelSaveDialog extends JDialog implements ActionListener, MouseLis
             gbc_txtAuthortextfield.gridy = 1;
             contentPanel.add(txtAuthortextfield, gbc_txtAuthortextfield);
             txtAuthortextfield.setColumns(10);
-        }
-        {
-            JLabel lblRevision = new JLabel(ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.lblRevision.text")); //$NON-NLS-1$ //$NON-NLS-2$
-            GridBagConstraints gbc_lblRevision = new GridBagConstraints();
-            gbc_lblRevision.insets = new Insets(0, 0, 5, 5);
-            gbc_lblRevision.gridx = 0;
-            gbc_lblRevision.gridy = 2;
-            contentPanel.add(lblRevision, gbc_lblRevision);
-        }
-        {
-            // needs to be restricted to numbers greater than 0
-            spinnerRevision = new JSpinner(new SpinnerNumberModel(1, 1, 1000, 1));
-            GridBagConstraints gbc_spinner = new GridBagConstraints();
-            gbc_spinner.insets = new Insets(0, 0, 5, 0);
-            gbc_spinner.anchor = GridBagConstraints.WEST;
-            gbc_spinner.gridx = 1;
-            gbc_spinner.gridy = 2;
-            contentPanel.add(spinnerRevision, gbc_spinner);
         }
         {
             JLabel lblDifficulty = new JLabel(ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.lblDifficulty.text")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -207,7 +188,6 @@ public class LevelSaveDialog extends JDialog implements ActionListener, MouseLis
                               final com.deaddropgames.editor.pickle.Level level) {
 
         this.defaultDir = defaultDir;
-        spinnerRevision.setValue(1);
 
         if(!isExport && currFilename != null) {
 
@@ -235,7 +215,6 @@ public class LevelSaveDialog extends JDialog implements ActionListener, MouseLis
 
             txtTitletextfield.setText(level.getName());
             txtAuthortextfield.setText(level.getAuthor());
-            spinnerRevision.setValue(level.getRevision());
             if(level.getDifficulty() < comboDifficulty.getItemCount()) {
 
                 comboDifficulty.setSelectedIndex(level.getDifficulty());
@@ -249,7 +228,6 @@ public class LevelSaveDialog extends JDialog implements ActionListener, MouseLis
 
             txtTitletextfield.setText("");
             txtAuthortextfield.setText("");
-            spinnerRevision.setValue(1);
             comboDifficulty.setSelectedIndex(0);
             txtDescriptiontextarea.setText("");
             txtFilenametextfield.setText("");
@@ -260,7 +238,6 @@ public class LevelSaveDialog extends JDialog implements ActionListener, MouseLis
 
         level.setName(txtTitletextfield.getText());
         level.setAuthor(txtAuthortextfield.getText());
-        level.setRevision((Integer)spinnerRevision.getValue());
         level.setDifficulty(comboDifficulty.getSelectedIndex());
         level.setDescription(txtDescriptiontextarea.getText());
     }

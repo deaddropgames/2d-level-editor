@@ -5,12 +5,14 @@ import com.deaddropgames.editor.elements.IDrawableElement;
 
 public class Level extends BaseLevel {
 
+    private transient long id;
     private Array terrainGroups;
     private Array objects;
 
     public Level() {
 
         super();
+        id = 0;
         terrainGroups = new Array();
         objects = new Array();
     }
@@ -47,5 +49,10 @@ public class Level extends BaseLevel {
     public Array getObjects() {
 
         return objects;
+    }
+
+    public long getId() {
+
+        return id;
     }
 }

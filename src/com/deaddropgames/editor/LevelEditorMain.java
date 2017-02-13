@@ -23,7 +23,6 @@ import java.awt.event.InputEvent;
 import javax.swing.JSeparator;
 
 import java.io.*;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -258,6 +257,19 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         });
         mnFile.add(mntmExport);
 
+        JSeparator separator_web2 = new JSeparator();
+        mnFile.add(separator_web2);
+
+        JMenuItem mntmDownload = new JMenuItem(rb.getString("LevelEditorMain.mntmDownload.text"));
+        mntmDownload.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent arg0) {
+
+                downloadLevel();
+            }
+        });
+        mnFile.add(mntmDownload);
+
         JMenuItem mntmUpload = new JMenuItem(rb.getString("LevelEditorMain.mntmUpload.text"));
         mntmUpload.addActionListener(new ActionListener() {
 
@@ -463,6 +475,22 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         btnExport.setToolTipText(rb.getString("LevelEditorMain.btnExport.toolTip"));
         toolBar.add(btnExport);
 
+        JSeparator separator_web = new JSeparator();
+        separator_web.setOrientation(SwingConstants.VERTICAL);
+        separator_web.setMaximumSize(new Dimension(10, 16));
+        toolBar.add(separator_web);
+
+        JButton btnDownload = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/arrow_down.png")));
+        btnDownload.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+
+                downloadLevel();
+            }
+        });
+        btnDownload.setToolTipText(rb.getString("LevelEditorMain.btnDownload.toolTip"));
+        toolBar.add(btnDownload);
+
         JButton btnUpload = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/arrow_up.png")));
         btnUpload.addActionListener(new ActionListener() {
 
@@ -478,6 +506,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         separator_4.setOrientation(SwingConstants.VERTICAL);
         separator_4.setMaximumSize(new Dimension(10, 16));
         toolBar.add(separator_4);
+
         toolBar.add(btnZoomIn);
 
         JButton btnZoomOut = new JButton(new ImageIcon(LevelEditorMain.class.getResource("icons/zoom_out.png")));
@@ -1421,41 +1450,27 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         // TODO: upload the level
     }
 
+    private void downloadLevel() {
+
+        if (!levelRepository.hasToken()) {
+
+            if (!initializeUserToken()) {
+
+                return;
+            }
+        }
+
+        LevelListDialog levelListDialog = new LevelListDialog(levelRepository);
+        levelListDialog.setLocationRelativeTo(frmEditor);
+        levelListDialog.setVisible(true);
+    }
+
     private boolean initializeUserToken() {
 
-        LoginDialog loginDialog = new LoginDialog();
+        LoginDialog loginDialog = new LoginDialog(levelRepository, rb);
         loginDialog.setLocationRelativeTo(frmEditor);
         loginDialog.setVisible(true);
 
-        if(loginDialog.wasCancelled()) {
-
-            return false;
-        }
-
-        boolean initialized;
-        try {
-
-            initialized = levelRepository.initToken(loginDialog.getUsername(), loginDialog.getPassword());
-        } catch (IOException | URISyntaxException e) {
-
-            JOptionPane.showMessageDialog(frmEditor,
-                    e.getMessage(),
-                    rb.getString("LevelEditorMain.btnUpload.failedLogin.title"),
-                    JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-
-        // likely means we failed login
-        if (!initialized) {
-
-            JOptionPane.showMessageDialog(frmEditor,
-                    rb.getString("LevelEditorMain.btnUpload.failedLogin.text") + "\n" +
-                            levelRepository.getStatusLine().getReasonPhrase(),
-                    rb.getString("LevelEditorMain.btnUpload.failedLogin.title"),
-                    JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-
-        return true;
+        return !loginDialog.wasCancelled();
     }
 }

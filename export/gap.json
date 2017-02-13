@@ -2,7 +2,6 @@
   "name": "Wall Gap",
   "description": "A jump over a gap with a wall in the middle.",
   "author": "Tristen Georgiou",
-  "revision": 1,
   "difficulty": 1,
   "polyLines": [
     {
