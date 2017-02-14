@@ -21,12 +21,10 @@ public class LoginDialog extends JDialog implements ActionListener {
     private JButton linkButton;
     private boolean wasCancelled;
     private LevelRepository levelRepository;
-    private ResourceBundle rb;
 
-    public LoginDialog(LevelRepository levelRepository, final ResourceBundle rb) {
+    public LoginDialog(LevelRepository levelRepository) {
 
         this.levelRepository = levelRepository;
-        this.rb = rb;
 
         setModalityType(ModalityType.APPLICATION_MODAL);
         setTitle(ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.loginDlg.title"));
@@ -192,7 +190,7 @@ public class LoginDialog extends JDialog implements ActionListener {
 
             JOptionPane.showMessageDialog(this,
                     e.getMessage(),
-                    rb.getString("LevelEditorMain.btnUpload.failedLogin.title"),
+                    ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelListDialog.btnUpload.failedLogin.title"),
                     JOptionPane.ERROR_MESSAGE);
             return false;
         }
@@ -201,9 +199,9 @@ public class LoginDialog extends JDialog implements ActionListener {
         if (!initialized) {
 
             JOptionPane.showMessageDialog(this,
-                    rb.getString("LevelEditorMain.btnUpload.failedLogin.text") + "\n" +
+                    ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelListDialog.btnUpload.failedLogin.text") + "\n" +
                             levelRepository.getStatusLine().getReasonPhrase(),
-                    rb.getString("LevelEditorMain.btnUpload.failedLogin.title"),
+                    ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelListDialog.btnUpload.failedLogin.title"),
                     JOptionPane.ERROR_MESSAGE);
             return false;
         }

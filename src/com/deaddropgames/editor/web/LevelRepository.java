@@ -9,16 +9,27 @@ import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.*;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.ssl.TrustStrategy;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,18 +39,48 @@ public class LevelRepository {
     private String token;
     private StatusLine statusLine;
 
-    private static final String baseUrl = "http://localhost:8000";
+    //private static final String baseUrl = "http://localhost:8000";
+    private static final String baseUrl = "https://deaddropgames.com";
     private static final String initTokenPath = "auth/token/";
     private static final String getLevelPath = "stuntski/api/editor/%d/";
     private static final String getLevelListPath = "stuntski/api/levels/";
+    private static final String getMyLevelListPath = "stuntski/api/levels/mine/";
     private static final String postLevelPath = "stuntski/api/editor/save/";
     private static final String putLevelPath = "stuntski/api/editor/save/%d/";
 
     public LevelRepository() {
 
-        httpclient = HttpClients.createDefault();
+        httpclient = createHttpClient();
         token = null;
         statusLine = null;
+    }
+
+    /**
+     * Creating this method so we can trust the SSL cert for CloseableHttpClient - apparently Java doesn't support
+     * Let's Encrypt yet!
+     * @return a CloseableHttpClient that will ignore SSL errors for CloseableHttpClient
+     */
+    private CloseableHttpClient createHttpClient() {
+
+        // This is all we should need - when JDK starts trusting Let's Encrypt!!!
+        // return HttpClients.createDefault();
+
+        SSLContext sslContext;
+        try {
+            sslContext = new SSLContextBuilder().loadTrustMaterial(null, new TrustStrategy() {
+
+                public boolean isTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+
+                    return true;
+                }
+            }).build();
+        } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
+
+            e.printStackTrace();
+            return HttpClients.createDefault();
+        }
+
+        return HttpClients.custom().setSSLContext(sslContext).setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
     }
 
     /**
@@ -94,24 +135,43 @@ public class LevelRepository {
     /**
      * Gets a list of levels
      * @param path the relative URI path or null to get the default (path is not null if a next/previous linke is used)
+     * @param queryParams filtering params
+     * @param mineOnly only shows the current user's levels
      * @return the level list result
      * @throws IOException unless we messed up our URIs above, this won't throw
      * @throws URISyntaxException unless we messed up our URIs above, this won't throw
      */
-    public ApiBaseList getLevelList(String path)
+    public ApiBaseList getLevelList(String path, List<NameValuePair> queryParams, boolean mineOnly)
             throws IOException, URISyntaxException {
 
         // if path is null use the default, otherwise assume the full path is passed through
-        URL url;
+        URI uri;
         if (path == null) {
 
-            url = createUrl(getLevelListPath);
+            URL url;
+            if (mineOnly) {
+
+                url = createUrl(getMyLevelListPath);
+            } else {
+
+                url = createUrl(getLevelListPath);
+            }
+
+            // add query params if they are specified - NOTE: API will return the query params for pagination!
+            URIBuilder builder = new URIBuilder(url.toURI());
+            if (queryParams != null && queryParams.size() > 0) {
+
+                builder.addParameters(queryParams);
+            }
+
+            uri = builder.build();
         } else {
 
-            url = new URL(path);
+            // NOTE: API will return the query params for pagination - so we can ignore them in this case
+            uri = new URL(path).toURI();
         }
 
-        HttpGet httpGet = new HttpGet(url.toURI());
+        HttpGet httpGet = new HttpGet(uri);
         addDefaultRequestHeaders(httpGet);
 
         ApiBaseList levelList = null;

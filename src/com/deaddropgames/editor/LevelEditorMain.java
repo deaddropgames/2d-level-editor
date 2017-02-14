@@ -74,7 +74,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
     final private String defaultLevelDir = "levels/";
     final private String defaultTestLevelFilename = "export/test.json";
     final private String defaultExportDir = "export/";
-    final private String editorConfigFilename = "conf/editor.json";
+    final static private String editorConfigFilename = "conf/editor.json";
 
     final private ResourceBundle rb = ResourceBundle.getBundle("com.deaddropgames.editor.messages");
 
@@ -112,6 +112,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
     // dialogs
     private LevelSaveDialog saveDlg;
     private SmoothTerrainDialog smoothDlg;
+    private DownloadLevelDialog downloadLevelDialog;
 
     // level repository - to interact with the online repository
     private LevelRepository levelRepository;
@@ -155,9 +156,9 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
         unsavedChanges = false;
         viewportCentre = null;
 
-        initialize();
-
         levelRepository = new LevelRepository();
+
+        initialize();
     }
 
     /**
@@ -279,6 +280,19 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
             }
         });
         mnFile.add(mntmUpload);
+
+        JSeparator separator_web3 = new JSeparator();
+        mnFile.add(separator_web3);
+
+        JMenuItem mntmLogin = new JMenuItem(rb.getString("LevelEditorMain.mntmLogin.text"));
+        mntmLogin.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent arg0) {
+
+                initializeUserToken();
+            }
+        });
+        mnFile.add(mntmLogin);
 
         JSeparator separator_2 = new JSeparator();
         mnFile.add(separator_2);
@@ -850,6 +864,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 
         saveDlg = new LevelSaveDialog();
         smoothDlg = new SmoothTerrainDialog(canvas);
+        downloadLevelDialog = new DownloadLevelDialog(levelRepository);
 
         frmEditor.setLocationRelativeTo(null);
 
@@ -1467,7 +1482,6 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
             return;
         }
 
-        DownloadLevelDialog downloadLevelDialog = new DownloadLevelDialog(levelRepository);
         downloadLevelDialog.setLocationRelativeTo(frmEditor);
         downloadLevelDialog.setVisible(true);
 
@@ -1476,7 +1490,6 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
             resetLevel();
 
             canvas.setLevel(downloadLevelDialog.getLevel());
-            downloadLevelDialog.dispose();
 
             currFilename = null;
 
@@ -1491,7 +1504,7 @@ public class LevelEditorMain implements IElementChangedListener, MouseListener {
 
     private boolean initializeUserToken() {
 
-        LoginDialog loginDialog = new LoginDialog(levelRepository, rb);
+        LoginDialog loginDialog = new LoginDialog(levelRepository);
         loginDialog.setLocationRelativeTo(frmEditor);
         loginDialog.setVisible(true);
 

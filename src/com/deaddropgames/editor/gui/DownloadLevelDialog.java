@@ -4,12 +4,16 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.deaddropgames.editor.pickle.ApiBaseList;
 import com.deaddropgames.editor.pickle.Level;
 import com.deaddropgames.editor.web.LevelRepository;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import java.awt.event.*;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class DownloadLevelDialog extends JDialog {
@@ -21,6 +25,10 @@ public class DownloadLevelDialog extends JDialog {
     private JButton previousBtn;
     private JButton nextBtn;
     private JLabel statusLabel;
+    private JTextField searchTextField;
+    private JComboBox<String> difficultyComboBox;
+    private JCheckBox showMineCheckbox;
+    private JButton searchButton;
 
     private LevelRepository levelRepository;
     private ApiBaseList levelList;
@@ -96,7 +104,74 @@ public class DownloadLevelDialog extends JDialog {
             }
         });
 
+        difficultyComboBox.setModel(new DefaultComboBoxModel<>(new String[] {
+                ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelListDialog.comboDifficulty.all"),
+                ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.comboDifficulty.circle"),
+                ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.comboDifficulty.square"),
+                ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.comboDifficulty.diamond"),
+                ResourceBundle.getBundle("com.deaddropgames.editor.gui.messages").getString("LevelSaveDialog.comboDifficulty.doubleDiamond")
+        }));
+
+        difficultyComboBox.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                onDifficultyChange();
+            }
+        });
+
+        showMineCheckbox.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                onShowMine();
+            }
+        });
+
+        searchButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                onSearchBtn();
+            }
+        });
+
         page = 1;
+        loadLevelList(null);
+    }
+
+    @Override
+    public void setVisible(boolean b) {
+
+        loadLevelList(null);
+        super.setVisible(b);
+    }
+
+    private void onSearchBtn() {
+
+        loadLevelList(null);
+    }
+
+    private void onShowMine() {
+
+        // have to be logged in for this one
+        if (showMineCheckbox.isSelected() && !levelRepository.hasToken()) {
+
+            if (!initializeUserToken()) {
+
+                showMineCheckbox.setSelected(false);
+                return;
+            }
+        }
+
+        loadLevelList(null);
+    }
+
+    private void onDifficultyChange() {
+
         loadLevelList(null);
     }
 
@@ -138,7 +213,8 @@ public class DownloadLevelDialog extends JDialog {
 
     private void onCancel() {
 
-        dispose();
+        level = null;
+        setVisible(false);
     }
 
     private void onPrevious() {
@@ -153,11 +229,30 @@ public class DownloadLevelDialog extends JDialog {
         loadLevelList(levelList.getNext());
     }
 
+    private List<NameValuePair> getQueryParams() {
+
+        List<NameValuePair> nameValuePairList = new ArrayList<>();
+
+        // 0 is all, so we can ignore it
+        if (difficultyComboBox.getSelectedIndex() > 0) {
+
+            nameValuePairList.add(new BasicNameValuePair("difficulty",
+                    String.valueOf(difficultyComboBox.getSelectedIndex() - 1)));
+        }
+
+        if (!searchTextField.getText().isEmpty()) {
+
+            nameValuePairList.add(new BasicNameValuePair("search", searchTextField.getText()));
+        }
+
+        return nameValuePairList;
+    }
+
     private void loadLevelList(String path) {
 
         try {
 
-            levelList = levelRepository.getLevelList(path);
+            levelList = levelRepository.getLevelList(path, getQueryParams(), showMineCheckbox.isSelected());
         } catch (IOException | URISyntaxException e) {
 
             JOptionPane.showMessageDialog(this,
@@ -184,6 +279,15 @@ public class DownloadLevelDialog extends JDialog {
         }
 
         levelListTableModel.updateTable(levelList);
+    }
+
+    private boolean initializeUserToken() {
+
+        LoginDialog loginDialog = new LoginDialog(levelRepository);
+        loginDialog.setLocationRelativeTo(this);
+        loginDialog.setVisible(true);
+
+        return !loginDialog.wasCancelled();
     }
 
     private class LevelListTableModel extends AbstractTableModel {
