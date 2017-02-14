@@ -29,7 +29,7 @@ dependencies {
 sourceCompatibility = 1.7
 sourceSets.main.java.srcDirs = [ "src/" ]
 sourceSets.main.resources.srcDirs = sourceSets.main.java.srcDirs
-version = '0.5.0'
+version = '0.6.0'
 
 project.ext.mainClassName = "com.deaddropgames.editor.LevelEditorMain"
 
@@ -50,7 +50,7 @@ task dist(type: Jar) {
         copy {
             from("conf") {
                 include "*.json"
-                filter{String line -> line.replaceAll("\\s+\"simJar\":.+", "    \"simJar\": \"bin/desktop-1.0.jar\",")}
+                filter{String line -> line.replaceAll("\\s+\"simJar\":.+", "    \"simJar\": \"bin/desktop-1.1.jar\",")}
             }
             into "res/conf"
         }

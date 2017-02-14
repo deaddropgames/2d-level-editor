@@ -1,6 +1,6 @@
 {
     "canvasWidth": 500,
     "canvasHeight": 300,
-    "simJar": "./../stunt-mountain/desktop/build/libs/desktop-1.0.jar",
+    "simJar": "./../stunt-mountain/desktop/build/libs/desktop-1.1.jar",
     "numCurveSegments": 10
 }
